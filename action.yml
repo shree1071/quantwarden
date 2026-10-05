@@ -1,0 +1,89 @@
+name: "QuantWarden Post-Quantum Cryptography Quality Gate"
+description: "Autonomous PQC CI/CD Gatekeeper — scans code for quantum-vulnerable cryptography (RSA, ECC, DH), enforces NIST FIPS 203/204 readiness scores, emits CycloneDX 1.6 CBOM & SARIF 2.1.0, and probes live TLS hybrid endpoints."
+author: "QuantWarden"
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  path:
+    description: "Directory or file to scan for cryptographic vulnerabilities (default: repository root)"
+    required: false
+    default: "."
+  min-score:
+    description: "Minimum acceptable Post-Quantum Readiness Score (0-100) before breaking the build"
+    required: false
+    default: "70"
+  fail-on:
+    description: "Minimum vulnerability severity threshold to break CI: critical, high, or medium"
+    required: false
+    default: "high"
+  sarif-file:
+    description: "File path to save the SARIF 2.1.0 security report"
+    required: false
+    default: "quantwarden.sarif"
+  cbom-file:
+    description: "File path to save the CycloneDX 1.6 Cryptographic Bill of Materials (CBOM)"
+    required: false
+    default: "quantwarden-cbom.json"
+  probe-domain:
+    description: "Optional live domain/endpoint to probe for X25519MLKEM768 TLS hybrid readiness (e.g. api.yourdomain.com)"
+    required: false
+    default: ""
+  gemini-api-key:
+    description: "Optional Google Gemini API key to generate automated AI architectural threat analysis"
+    required: false
+    default: ""
+
+outputs:
+  readiness-score:
+    description: "Calculated Post-Quantum Cryptography Readiness Score (0-100)"
+    value: ${{ steps.gate.outputs.readiness-score }}
+  hndl-count:
+    description: "Total number of Harvest Now, Decrypt Later (HNDL) intercept exposures detected"
+    value: ${{ steps.gate.outputs.hndl-count }}
+  gate-status:
+    description: "Quality gate verdict: PASSED or FAILED"
+    value: ${{ steps.gate.outputs.gate-status }}
+  sarif-path:
+    description: "Absolute path to the generated SARIF report"
+    value: ${{ steps.gate.outputs.sarif-path }}
+  cbom-path:
+    description: "Absolute path to the generated CycloneDX 1.6 CBOM"
+    value: ${{ steps.gate.outputs.cbom-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js Runtime
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Install QuantWarden CLI
+      shell: bash
+      run: |
+        npm install -g "$GITHUB_ACTION_PATH/cli" || npm link "$GITHUB_ACTION_PATH/cli" || true
+
+    - name: Execute QuantWarden Autonomous PQC Gatekeeper
+      id: gate
+      shell: bash
+      env:
+        GEMINI_API_KEY: ${{ inputs.gemini-api-key }}
+      run: |
+        echo "Running QuantWarden PQC Gatekeeper on ${{ inputs.path }}..."
+        
+        # Run CBOM generation first
+        node "$GITHUB_ACTION_PATH/cli/bin/quantwarden.js" cbom "${{ inputs.path }}" --out "${{ inputs.cbom-file }}"
+        
+        # If probe domain is provided, probe it
+        if [ -n "${{ inputs.probe-domain }}" ]; then
+          echo "Probing live endpoint: ${{ inputs.probe-domain }}..."
+          node "$GITHUB_ACTION_PATH/cli/bin/quantwarden.js" probe "${{ inputs.probe-domain }}" || true
+        fi
+
+        # Run quality gate with SARIF export and threshold enforcement
+        node "$GITHUB_ACTION_PATH/cli/bin/quantwarden.js" gate "${{ inputs.path }}" \
+          --min-score "${{ inputs.min-score }}" \
+          --fail-on "${{ inputs.fail-on }}" \
+          --sarif "${{ inputs.sarif-file }}"

@@ -1,0 +1,103 @@
+name: QuantWarden Post-Quantum Security Gate
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    # Daily quantum vulnerability audit at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  pqc-gatekeeper:
+    name: QuantWarden PQC Gate & CBOM Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install QuantWarden CLI
+        run: |
+          cd cli
+          npm install
+          npm link
+          cd ..
+
+      - name: Generate CycloneDX 1.6 CBOM (CERT-In / NIST Compliance)
+        run: |
+          echo "Generating CycloneDX 1.6 Cryptographic Bill of Materials..."
+          node cli/bin/quantwarden.js cbom . --out quantwarden-cbom.json
+
+      - name: Run QuantWarden CI Quality Gate
+        id: gate
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "Auditing codebase against NIST FIPS 203/204/205 standards..."
+          node cli/bin/quantwarden.js gate . \
+            --min-score 70 \
+            --fail-on high \
+            --sarif quantwarden.sarif | tee gate_output.txt
+          
+          # Capture exit status
+          echo "gate_exit=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: quantwarden.sarif
+          category: quantwarden-pqc
+
+      - name: Upload Cryptographic Bill of Materials (CBOM)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quantwarden-cbom
+          path: quantwarden-cbom.json
+          retention-days: 90
+
+      - name: Generate GitHub Actions Step Summary
+        if: always()
+        run: |
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ## QuantWarden Post-Quantum Cryptography Quality Gate
+
+          | Metric | Status | Standard / Target |
+          | :--- | :--- | :--- |
+          | **PQC Readiness Gate** | ${{ steps.gate.outputs.gate_exit == 0 && 'Passed' || 'Failed' }} | Min Score: 70 |
+          | **Cryptographic Standards** | NIST FIPS 203 / 204 / 205 | ML-KEM-768 & ML-DSA-65 |
+          | **HNDL Protection** | Intercept Prevention Monitored | RFC 9180 / Hybrid KEX |
+          | **Compliance Bill of Materials** | CycloneDX 1.6 CBOM | Attached in Artifacts |
+          | **Code Scanning SARIF** | Ingested to Security Tab | GitHub CodeQL / Dependabot |
+
+          ### Automated Remediation
+          To automatically refactor classical algorithms (RSA, ECDH, Diffie-Hellman) into NIST FIPS 203/204 implementations, run locally:
+          ```bash
+          # Audit and view unified diff
+          quantwarden remediate .
+
+          # Apply automated post-quantum patch
+          quantwarden remediate . --apply
+          ```
+          EOF
+
+      - name: Enforce Gate Result
+        if: steps.gate.outputs.gate_exit != 0
+        run: |
+          echo "::error::QuantWarden PQC Quality Gate failed. Quantum-vulnerable cryptographic algorithms or HNDL exposure detected."
+          exit 1

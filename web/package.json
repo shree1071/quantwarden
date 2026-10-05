@@ -1,0 +1,27 @@
+{
+  "name": "quantguard-domain-scanner",
+  "version": "1.0.0",
+  "description": "Live Post-Quantum Cryptography (PQC) & HNDL Risk Domain Scanner Web Platform",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "keywords": [
+    "pqc",
+    "post-quantum",
+    "tls",
+    "x25519mlkem768",
+    "kyber",
+    "fips-203",
+    "domain-scanner",
+    "cbom",
+    "hndl"
+  ],
+  "author": "FULCRUM",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google/genai": "^2.24.0"
+  }
+}

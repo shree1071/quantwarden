@@ -1,0 +1,34 @@
+{
+  "name": "quantwarden",
+  "version": "1.0.0",
+  "description": "QuantWarden Autonomous PQC Readiness Scanner & NIST FIPS 203/204 Remediation CLI",
+  "type": "module",
+  "bin": {
+    "quantwarden": "./bin/quantwarden.js",
+    "quantguard": "./bin/quantwarden.js",
+    "quantwarden-cli": "./bin/quantwarden.js",
+    "quantguard-cli": "./bin/quantwarden.js"
+  },
+  "scripts": {
+    "start": "node ./bin/quantwarden.js",
+    "test": "node ./bin/quantwarden.js scan ../extension/mock_workspace"
+  },
+  "keywords": [
+    "pqc",
+    "post-quantum",
+    "cryptography",
+    "nist",
+    "fips-203",
+    "fips-204",
+    "kyber",
+    "dilithium",
+    "cbom",
+    "cert-in",
+    "security-scanner"
+  ],
+  "author": "shreeharshazarthi",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google/genai": "^2.24.0"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "name": "quantguard",
+  "displayName": "Quantguard — Post-Quantum Cryptography (PQC) Sentinel",
+  "description": "Real-time in-editor quantum vulnerability discovery, NIST FIPS 203/204 automated refactoring, and CERT-In CBOM generation.",
+  "version": "1.0.0",
+  "publisher": "quantguard",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Security"
+  ],
+  "keywords": [
+    "pqc",
+    "post-quantum",
+    "cryptography",
+    "kyber",
+    "dilithium",
+    "cbom",
+    "cert-in",
+    "security"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "quantguard-sidebar",
+          "title": "Quantguard PQC",
+          "icon": "resources/shield.svg"
+        }
+      ]
+    },
+    "views": {
+      "quantguard-sidebar": [
+        {
+          "type": "webview",
+          "id": "quantguard.sidebarView",
+          "name": "Quantum Readiness"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "quantguard.showPosture",
+        "title": "Quantguard: Open Quantum Readiness Posture Dashboard",
+        "category": "Quantguard"
+      },
+      {
+        "command": "quantguard.scanWorkspace",
+        "title": "Quantguard: Scan Workspace for PQC Vulnerabilities",
+        "category": "Quantguard"
+      },
+      {
+        "command": "quantguard.scanActiveFile",
+        "title": "Quantguard: Scan Current File for Quantum Readiness",
+        "category": "Quantguard"
+      },
+      {
+        "command": "quantguard.exportCBOM",
+        "title": "Quantguard: Export CERT-In Compliant CBOM (CycloneDX 1.6)",
+        "category": "Quantguard"
+      },
+      {
+        "command": "quantguard.remediateWorkspace",
+        "title": "Quantguard: Autonomously Remediate Legacy Cryptography (NIST FIPS 203/204)",
+        "category": "Quantguard"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "quantguard.scanActiveFile",
+          "group": "quantguard@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "quantguard.scanWorkspace",
+          "group": "quantguard@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Quantguard PQC Sentinel",
+      "properties": {
+        "quantguard.enableRealtimeScanning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time scanning of active files on open and save."
+        },
+        "quantguard.severityThreshold": {
+          "type": "string",
+          "enum": [
+            "info",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "default": "high",
+          "description": "Minimum severity of findings to highlight with red/yellow squiggly lines."
+        },
+        "quantguard.standardsProfile": {
+          "type": "string",
+          "enum": [
+            "nist",
+            "cnsa-2.0",
+            "cert-in"
+          ],
+          "default": "nist",
+          "description": "Compliance standards profile for migration recommendations."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --define:import.meta.url=\"\\\"file:///extension.js\\\"\"",
+    "watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.80.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3"
+  }
+}
