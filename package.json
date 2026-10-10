@@ -10,6 +10,7 @@
     "extension"
   ],
   "scripts": {
+    "build": "echo 'QuantWarden ready'",
     "cli": "node cli/bin/quantwarden.js",
     "web": "node web/src/server.js",
     "scan": "node cli/bin/quantwarden.js scan extension/mock_workspace",
