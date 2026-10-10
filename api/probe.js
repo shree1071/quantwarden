@@ -11,10 +11,14 @@ export default async function handler(req, res) {
         return;
     }
 
-    const domain = req.query.domain || req.query.target;
-    const port = parseInt(req.query.port || "443", 10);
-    const mode = req.query.mode || "auto";
-    const skipAi = req.query.ai === "false";
+    let body = req.body;
+    if (typeof body === "string") {
+        try { body = JSON.parse(body); } catch (_) {}
+    }
+    const domain = (body && (body.domain || body.target)) || (req.query && (req.query.domain || req.query.target));
+    const port = parseInt((body && body.port) || (req.query && req.query.port) || "443", 10);
+    const mode = (body && body.mode) || (req.query && req.query.mode) || "auto";
+    const skipAi = (body && body.ai === false) || (req.query && req.query.ai === "false");
 
     if (!domain) {
         res.status(400).json({ ok: false, error: "Missing required 'domain' parameter." });

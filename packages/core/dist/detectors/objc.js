@@ -1,0 +1,146 @@
+import { eachMatch, findingFromRule, hasExtension, maskBlockComments, maskCommentLines, OBJC_EXTENSIONS, } from "../detect-utils.js";
+import { CWE_BROKEN_CRYPTO } from "../cwe.js";
+// Security-framework key-type attributes (used with SecKeyCreateRandomKey /
+// SecKeyGeneratePair). RSA vs EC. The EC form covers both the modern
+// `kSecAttrKeyTypeECSECPrimeRandom` and the legacy `kSecAttrKeyTypeEC` alias.
+const RE_OBJC_SEC_RSA = /\bkSecAttrKeyTypeRSA\b/g;
+const RE_OBJC_SEC_EC = /\bkSecAttrKeyType(?:ECSECPrimeRandom|EC)\b/g;
+// SecKey algorithm constants for signing / encryption / key agreement. The `\w*`
+// tail captures the full family suffix (…PKCS1v15SHA256, …OAEPSHA256, …Standard,
+// …CofactorX963SHA256, …) without needing to enumerate every variant.
+const RE_OBJC_RSA_SIGN = /\bkSecKeyAlgorithmRSASignature\w*/g;
+const RE_OBJC_RSA_ENCRYPT = /\bkSecKeyAlgorithmRSAEncryption\w*/g;
+const RE_OBJC_ECDSA_SIGN = /\bkSecKeyAlgorithmECDSASignature\w*/g;
+const RE_OBJC_ECDH = /\bkSecKeyAlgorithmECDHKeyExchange\w*/g;
+const RULE_OBJC_SEC_RSA = {
+    id: "objc-seckey-rsa",
+    title: "Objective-C Security-framework RSA key",
+    description: "SecKeyCreateRandomKey / SecKeyGeneratePair with kSecAttrKeyTypeRSA",
+    category: "kem",
+    severity: "high",
+    confidence: "high",
+    algorithm: "RSA",
+    hndl: true,
+    cwe: CWE_BROKEN_CRYPTO,
+    message: "Security-framework RSA key (Objective-C) is classical and not quantum-safe.",
+    remediation: "Migrate to PQC as Apple's CryptoKit / Security add support: ML-KEM for encryption/key-agreement, ML-DSA for signatures.",
+};
+const RULE_OBJC_SEC_EC = {
+    id: "objc-seckey-ec",
+    title: "Objective-C Security-framework EC key",
+    description: "SecKeyCreateRandomKey / SecKeyGeneratePair with kSecAttrKeyTypeECSECPrimeRandom",
+    // An EC key at generation is AMBIGUOUS (it can feed ECDSA signing OR ECDH key
+    // agreement). The fleet convention (java-ec-keygen, python-ec-keygen, swift-sec-ec,
+    // cloud-kms-ec, …) classifies ambiguous EC keygen as key-exchange/ECDH/hndl:true —
+    // the HNDL-SAFE choice, so a possible key-agreement use is never under-reported.
+    category: "key-exchange",
+    severity: "high",
+    confidence: "high",
+    algorithm: "ECDH",
+    hndl: true,
+    cwe: CWE_BROKEN_CRYPTO,
+    message: "Security-framework EC key (Objective-C); EC keys feed ECDH key agreement (harvest-now-decrypt-later exposed) as well as ECDSA signatures, and are not quantum-safe.",
+    remediation: "Migrate to PQC as Apple's CryptoKit / Security add support: ML-KEM for the ECDH key-agreement path, ML-DSA for signatures.",
+};
+const RULE_OBJC_RSA_SIGN = {
+    id: "objc-rsa-sign",
+    title: "Objective-C RSA signature",
+    description: "SecKeyCreateSignature / SecKeyVerifySignature with kSecKeyAlgorithmRSASignature*",
+    category: "signature",
+    // `high`, consistent with every sibling pack's signature severity (swift-rsa,
+    // go-rsa-sign, java-rsa-sign) — the same primitive must not flip CI exit codes
+    // based on which language wrote it.
+    severity: "high",
+    confidence: "high",
+    algorithm: "RSA",
+    hndl: false,
+    cwe: CWE_BROKEN_CRYPTO,
+    message: "Classical RSA signing (Objective-C, Security framework) is forgeable by a quantum attacker.",
+    remediation: "Migrate to ML-DSA (FIPS 204) as Apple's CryptoKit / Security add PQC support.",
+};
+const RULE_OBJC_RSA_ENCRYPT = {
+    id: "objc-rsa-encrypt",
+    title: "Objective-C RSA encryption",
+    description: "SecKeyCreateEncryptedData with kSecKeyAlgorithmRSAEncryption*",
+    category: "kem",
+    severity: "high",
+    confidence: "high",
+    algorithm: "RSA",
+    hndl: true,
+    cwe: CWE_BROKEN_CRYPTO,
+    message: "Classical RSA encryption (Objective-C, Security framework) is harvest-now-decrypt-later exposed.",
+    remediation: "Migrate to ML-KEM (FIPS 203) as Apple's CryptoKit / Security add PQC support.",
+};
+const RULE_OBJC_ECDSA_SIGN = {
+    id: "objc-ecdsa-sign",
+    title: "Objective-C ECDSA signature",
+    description: "SecKeyCreateSignature / SecKeyVerifySignature with kSecKeyAlgorithmECDSASignature*",
+    category: "signature",
+    // `high`, consistent with swift-ecdsa / go-ecdsa / java-ecdsa-sign / dart-ecdsa.
+    severity: "high",
+    confidence: "high",
+    algorithm: "ECDSA",
+    hndl: false,
+    cwe: CWE_BROKEN_CRYPTO,
+    message: "Classical ECDSA signing (Objective-C, Security framework) is forgeable by a quantum attacker.",
+    remediation: "Migrate to ML-DSA (FIPS 204) as Apple's CryptoKit / Security add PQC support.",
+};
+const RULE_OBJC_ECDH = {
+    id: "objc-ecdh",
+    title: "Objective-C ECDH key agreement",
+    description: "SecKeyCopyKeyExchangeResult with kSecKeyAlgorithmECDHKeyExchange*",
+    category: "key-exchange",
+    severity: "high",
+    confidence: "high",
+    algorithm: "ECDH",
+    hndl: true,
+    cwe: CWE_BROKEN_CRYPTO,
+    message: "Elliptic-curve Diffie-Hellman (Objective-C, Security framework) is broken by Shor's algorithm (harvest-now-decrypt-later).",
+    remediation: "Migrate key agreement to ML-KEM (FIPS 203) as Apple's CryptoKit / Security add PQC support.",
+};
+/** Detects classical asymmetric crypto in Objective-C (Apple Security framework). */
+export const objcDetector = {
+    id: "objc-crypto",
+    description: "Classical asymmetric crypto in Objective-C (Apple Security framework / SecKey)",
+    scope: "source",
+    language: "objc",
+    rules: [
+        RULE_OBJC_SEC_RSA,
+        RULE_OBJC_SEC_EC,
+        RULE_OBJC_RSA_SIGN,
+        RULE_OBJC_RSA_ENCRYPT,
+        RULE_OBJC_ECDSA_SIGN,
+        RULE_OBJC_ECDH,
+    ],
+    appliesTo: (f) => hasExtension(f, OBJC_EXTENSIONS),
+    detect({ file, content }) {
+        // Fast reject: none of the Security-framework surface can appear without one
+        // of these substrings, so most Objective-C files bail before any regex runs.
+        if (!content.includes("SecKey") &&
+            !content.includes("kSecAttrKeyType") &&
+            !content.includes("kSecKeyAlgorithm")) {
+            return [];
+        }
+        // Mask C-style block comments then `//` line comments so commented-out crypto
+        // does not fire. Both maskers preserve byte offsets, so finding line/column
+        // stay exact.
+        const masked = maskCommentLines(maskBlockComments(content), ["//"]);
+        const findings = [];
+        // Scan the masked text, but build the finding (its snippet) from the ORIGINAL
+        // `content` so a line with a trailing comment renders live, not blanked.
+        const add = (re, rule) => eachMatch(re, masked, (m) => findings.push(findingFromRule(rule, {
+            file,
+            content,
+            index: m.index,
+            matchLength: m[0].length,
+        })));
+        add(RE_OBJC_SEC_RSA, RULE_OBJC_SEC_RSA);
+        add(RE_OBJC_SEC_EC, RULE_OBJC_SEC_EC);
+        add(RE_OBJC_RSA_SIGN, RULE_OBJC_RSA_SIGN);
+        add(RE_OBJC_RSA_ENCRYPT, RULE_OBJC_RSA_ENCRYPT);
+        add(RE_OBJC_ECDSA_SIGN, RULE_OBJC_ECDSA_SIGN);
+        add(RE_OBJC_ECDH, RULE_OBJC_ECDH);
+        return findings;
+    },
+};
+//# sourceMappingURL=objc.js.map

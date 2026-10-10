@@ -5,10 +5,14 @@
   "private": true,
   "type": "module",
   "workspaces": [
+    "packages/*",
     "cli",
     "web",
     "extension"
   ],
+  "dependencies": {
+    "@quantakrypto/core": "file:./packages/core"
+  },
   "scripts": {
     "build": "echo 'QuantWarden ready'",
     "cli": "node cli/bin/quantwarden.js",

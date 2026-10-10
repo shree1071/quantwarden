@@ -16,6 +16,7 @@ yarn-error.log*
 
 # Build artifacts
 dist/
+!packages/core/dist/
 build/
 *.vsix
 

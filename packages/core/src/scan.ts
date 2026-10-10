@@ -1,0 +1,328 @@
+/**
+ * Scan orchestrator. Walks the target (or an explicit file list), runs the
+ * applicable detectors over each file, parses dependency manifests, aggregates
+ * everything into an inventory, and returns a {@link ScanResult} with timing and
+ * the tool version.
+ *
+ * Detector scope (source vs config) is driven by each {@link Detector}'s
+ * declared `scope` (defaulting to "source"), not by ruleId prefixes. The
+ * detector set comes from {@link defaultRegistry} unless overridden via
+ * `options.detectors`.
+ */
+import { readFile, stat } from "node:fs/promises";
+import * as path from "node:path";
+
+import type { Detector, Finding, InventoryAsset, ScanOptions, ScanResult } from "./types.js";
+import { inventoryFile, mergeAssets } from "./inventory-scan.js";
+import {
+  walkFiles,
+  toPosix,
+  isBinaryPath,
+  isKeystorePath,
+  looksMinified,
+  matchesAny,
+  DEFAULT_MAX_FILE_SIZE,
+} from "./walk.js";
+import { isAnalyzableSource } from "./detect-utils.js";
+import {
+  stripCommentFindings,
+  stripIgnoredFindings,
+  stripStringLiteralFindings,
+} from "./comments.js";
+
+/**
+ * Rules whose token is only meaningful as code, never inside a string literal.
+ * A match inside a string (e.g. `t.Error("SigningMethodPS256 …")`) is prose and
+ * is dropped. Rules that legitimately match quoted tokens are NOT listed here.
+ */
+const CODE_ONLY_RULES: ReadonlySet<string> = new Set([
+  "go-jwt-signingmethod",
+  // Identifier-form JWT alg constants (jjwt `SignatureAlgorithm.RS256`, auth0
+  // `Algorithm.RSA256`, C# `SecurityAlgorithms.*`, Rust `Algorithm::RS256`). Like the
+  // Go rule, these are only meaningful as code; the SAME token inside a string literal
+  // (an error message that names/forbids the alg) is prose, not a usage.
+  "java-jwt-alg",
+  "csharp-jwt-alg",
+  "rust-jwt-algorithm",
+]);
+import { hashContent, loadCache, rulesetFingerprint, saveCache } from "./cache.js";
+import type { CacheEntry } from "./cache.js";
+import { builtinDetectors, defaultRegistry, detectorScope } from "./registry.js";
+import { isManifestFile, scanManifest } from "./dependencies.js";
+import { buildInventory } from "./inventory.js";
+import { AbortError, BudgetExceededError } from "./errors.js";
+import { VERSION } from "./version.js";
+
+/**
+ * The full set of built-in detectors exposed on the public API. Re-exported
+ * from {@link builtinDetectors} in `registry.ts` — the single source of truth
+ * the {@link defaultRegistry} is also built from — so the public array and the
+ * registry can never drift apart. The manifest scanner is handled separately
+ * (it parses JSON rather than running a Detector).
+ */
+export const detectors: Detector[] = builtinDetectors;
+
+/** Stable comparator: by file, then line, then ruleId. Exported for reuse. */
+export function compareFindings(a: Finding, b: Finding): number {
+  if (a.location.file !== b.location.file) return a.location.file < b.location.file ? -1 : 1;
+  if (a.location.line !== b.location.line) return a.location.line - b.location.line;
+  return a.ruleId < b.ruleId ? -1 : a.ruleId > b.ruleId ? 1 : 0;
+}
+
+/** Resolve the active detector list for a scan (override or the default registry). */
+function resolveDetectors(options: ScanOptions): Detector[] {
+  return options.detectors ?? defaultRegistry.all();
+}
+
+/**
+ * Run all applicable detectors + the manifest scanner over a single file's
+ * contents, honouring the source / config / dependencies toggles. Pure: no I/O.
+ * Exported so the parallel worker and unit tests can drive it directly.
+ */
+export function detectFile(
+  file: string,
+  content: string,
+  dets: readonly Detector[],
+  toggles: { source: boolean; config: boolean; deps: boolean },
+  disabledRules?: readonly string[],
+): Finding[] {
+  let out: Finding[] = [];
+
+  for (const det of dets) {
+    if (!det.appliesTo(file)) continue;
+    const isConfig = detectorScope(det) === "config";
+    if (isConfig ? !toggles.config : !toggles.source) continue;
+    out.push(...det.detect({ file, content }));
+  }
+
+  // Drop lexical false positives that land inside comments (`// migrated off
+  // createECDH()`), then honour inline `// qscan-ignore-line` /
+  // `qscan-ignore-next-line` directives. Both run before the dependency scan
+  // appends its findings (manifests carry neither).
+  out = stripCommentFindings(out, content, file);
+  out = stripStringLiteralFindings(out, content, file, CODE_ONLY_RULES);
+  out = stripIgnoredFindings(out, content);
+
+  if (toggles.deps && isManifestFile(file)) {
+    out.push(...scanManifest(file, content));
+  }
+
+  // Per-rule suppression: drop findings whose ruleId was disabled. Applied here
+  // so both the serial scan and the worker path honour it identically.
+  if (disabledRules && disabledRules.length > 0) {
+    const disabled = new Set(disabledRules);
+    return out.filter((f) => !disabled.has(f.ruleId));
+  }
+
+  return out;
+}
+
+/**
+ * Recursively scan a directory (or single file, or explicit file list) for
+ * classical asymmetric crypto. Honours the source / dependencies / config
+ * toggles (all default true) and reports progress through `options.onFile`.
+ */
+export async function scan(options: ScanOptions): Promise<ScanResult> {
+  const startedAt = new Date();
+
+  const doSource = options.source !== false;
+  const doDeps = options.dependencies !== false;
+  const doConfig = options.config !== false;
+  const scanMinified = options.scanMinified === true;
+  const dets = resolveDetectors(options);
+
+  // Resolve whether the root is a file so we can rebuild absolute paths to read.
+  const rootStat = await stat(options.root);
+  const rootIsFile = rootStat.isFile();
+  const baseDir = rootIsFile ? path.dirname(options.root) : options.root;
+  const singleFileName = rootIsFile ? path.basename(options.root) : null;
+
+  const findings: Finding[] = [];
+  // Cryptography that is FINE, which no finding detector can report. Collected
+  // per file and merged once at the end. See inventory-scan.ts.
+  const assetsPerFile: InventoryAsset[][] = [];
+  let filesScanned = 0;
+  let analyzedFiles = 0;
+  let bytesScanned = 0;
+  let unreadable = 0;
+  let skippedMinified = 0;
+
+  // Optional content-hash scan cache: unchanged files reuse prior findings.
+  const cacheFile = options.cacheFile;
+  const ruleset = cacheFile ? rulesetFingerprint(dets, options.disabledRules) : "";
+  const cache = cacheFile ? await loadCache(cacheFile, ruleset) : null;
+  // A full scan starts with an empty next-cache so files that vanished are
+  // evicted. An INCREMENTAL scan (explicit `files` list) only visits a subset,
+  // so seed the next-cache with the existing entries — otherwise saving would
+  // drop every file we didn't happen to scan this run (audit: arch #4).
+  const incremental = Array.isArray(options.files);
+  const nextEntries: Map<string, CacheEntry> | null = cacheFile
+    ? new Map(incremental && cache ? cache : [])
+    : null;
+
+  // Work-budget / cancellation controls (all optional, unlimited when omitted).
+  const signal = options.signal;
+  const maxFiles = options.maxFiles;
+  const maxBytes = options.maxBytes;
+
+  // Source of relative paths: an explicit file list (incremental) or the walker.
+  const relPaths: AsyncIterable<string> = options.files
+    ? filterExplicitFiles(options.files, options)
+    : walkFiles(options.root, {
+        include: options.include,
+        exclude: options.exclude,
+        noDefaultIgnores: options.noDefaultIgnores,
+        maxFileSize: options.maxFileSize,
+      });
+
+  for await (const rel of relPaths) {
+    // Cooperative cancellation: check the signal at the top of every iteration.
+    if (signal?.aborted) throw new AbortError();
+
+    // File-count budget: enforced before reading the next file.
+    if (typeof maxFiles === "number" && filesScanned >= maxFiles) {
+      throw new BudgetExceededError(`maxFiles budget exceeded (limit: ${maxFiles}).`);
+    }
+
+    // In single-file mode, walkFiles yields the basename; map back to the file.
+    const absPath = singleFileName ? options.root : path.join(baseDir, ...rel.split("/"));
+    const reportedPath = singleFileName ? toPosix(rel) : rel;
+
+    options.onFile?.(reportedPath);
+
+    // Cryptographic keystores (.jks/.p12/…) are binary; read them byte-preserving
+    // (latin1) so the keystore detector can inspect magic bytes.
+    const keystore = isKeystorePath(reportedPath);
+    // Keystores are read whole into memory as latin1. The walker already caps file
+    // size, but the explicit-file-list (incremental) path does not — so stat and
+    // skip an oversized binary here to avoid reading a huge encrypted archive
+    // (`.gpg`) into a string.
+    if (keystore) {
+      try {
+        const { size } = await stat(absPath);
+        if (size > (options.maxFileSize ?? DEFAULT_MAX_FILE_SIZE)) continue;
+      } catch {
+        unreadable += 1;
+        continue;
+      }
+    }
+    let content: string;
+    try {
+      content = await readFile(absPath, keystore ? "latin1" : "utf8");
+    } catch {
+      unreadable += 1; // permissions / vanished / decode failure — tracked, not silent.
+      continue;
+    }
+
+    // Skip machine-minified / generated content (unless explicitly enabled).
+    // Manifests and keystores are always scanned.
+    if (!scanMinified && !isManifestFile(reportedPath) && !keystore && looksMinified(content)) {
+      skippedMinified += 1;
+      continue;
+    }
+
+    // Cumulative-byte budget: enforced once this file's bytes are accounted for.
+    // Use the read encoding so a latin1 keystore is counted at its on-disk size
+    // (a utf8 byteLength would double-count every byte ≥ 0x80).
+    bytesScanned += Buffer.byteLength(content, keystore ? "latin1" : "utf8");
+    if (typeof maxBytes === "number" && bytesScanned > maxBytes) {
+      throw new BudgetExceededError(`maxBytes budget exceeded (limit: ${maxBytes}).`);
+    }
+
+    filesScanned += 1;
+    if (isAnalyzableSource(reportedPath)) analyzedFiles += 1;
+
+    // Cache: reuse prior findings when the content hash matches; otherwise scan
+    // and record. `nextEntries` becomes the new cache (dropping vanished files).
+    let fileFindings: Finding[];
+    if (cache && nextEntries) {
+      const hash = hashContent(content);
+      const hit = cache.get(reportedPath);
+      fileFindings =
+        hit && hit.hash === hash
+          ? hit.findings
+          : detectFile(
+              reportedPath,
+              content,
+              dets,
+              { source: doSource, config: doConfig, deps: doDeps },
+              options.disabledRules,
+            );
+      nextEntries.set(reportedPath, { hash, findings: fileFindings });
+    } else {
+      fileFindings = detectFile(
+        reportedPath,
+        content,
+        dets,
+        { source: doSource, config: doConfig, deps: doDeps },
+        options.disabledRules,
+      );
+    }
+    findings.push(...fileFindings);
+    // Deliberately outside the findings cache: that cache is keyed on the
+    // ruleset, and the inventory pass is not part of it. Re-running a cheap
+    // regex sweep is the honest cost of not silently serving a stale inventory
+    // from a cache that never knew about it.
+    assetsPerFile.push(inventoryFile(reportedPath, content));
+  }
+
+  // Persist the cache (best effort) before ordering/returning.
+  if (cacheFile && nextEntries) await saveCache(cacheFile, ruleset, nextEntries);
+
+  // Stable ordering: by file, then line, then ruleId.
+  findings.sort(compareFindings);
+
+  const inventory = buildInventory(findings, mergeAssets(assetsPerFile));
+  const finishedAt = new Date();
+
+  return {
+    root: options.root,
+    findings,
+    filesScanned,
+    analyzedFiles,
+    diagnostics: { unreadable, skippedMinified },
+    inventory,
+    startedAt: startedAt.toISOString(),
+    finishedAt: finishedAt.toISOString(),
+    toolVersion: VERSION,
+  };
+}
+
+/**
+ * Filter an explicit relative file list down to the paths that pass the binary
+ * filter and the include/exclude patterns, returning them deduped and sorted for
+ * deterministic output. Size limits are enforced later (we still read manifests
+ * over the cap). Non-existent files are simply skipped at read time.
+ *
+ * Pure + synchronous, and exported so the parallel enumerator applies the EXACT
+ * same filtering for explicit file lists as the serial path (byte-for-byte
+ * identical results under `--parallel`).
+ */
+export function filterExplicitFileList(
+  files: readonly string[],
+  options: Pick<ScanOptions, "include" | "exclude">,
+): string[] {
+  const include = options.include ?? [];
+  const exclude = options.exclude ?? [];
+  const seen = new Set<string>();
+  const list = [...files]
+    .map((f) => toPosix(f))
+    .filter((f) => {
+      if (seen.has(f)) return false;
+      seen.add(f);
+      return true;
+    })
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+
+  return list.filter((rel) => {
+    if (isBinaryPath(rel)) return false;
+    if (include.length > 0 && !matchesAny(rel, include)) return false;
+    if (matchesAny(rel, exclude)) return false;
+    return true;
+  });
+}
+
+/** Async-generator wrapper around {@link filterExplicitFileList} for `scan()`. */
+async function* filterExplicitFiles(files: string[], options: ScanOptions): AsyncGenerator<string> {
+  for (const rel of filterExplicitFileList(files, options)) yield rel;
+}

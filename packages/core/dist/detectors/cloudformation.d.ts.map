@@ -1,0 +1,1 @@
+{"version":3,"file":"cloudformation.d.ts","sourceRoot":"","sources":["../../src/detectors/cloudformation.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;;;;;;;;;GAsBG;AACH,OAAO,KAAK,EAAE,QAAQ,EAAqB,MAAM,aAAa,CAAC;AA0B/D;;;;;;GAMG;AACH,wBAAgB,mBAAmB,CAAC,IAAI,EAAE,MAAM,EAAE,OAAO,EAAE,MAAM,GAAG,OAAO,CAE1E;AA6ID;;;GAGG;AACH,eAAO,MAAM,sBAAsB,EAAE,QA8CpC,CAAC"}

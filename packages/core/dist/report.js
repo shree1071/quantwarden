@@ -1,0 +1,477 @@
+import { VERSION } from "./version.js";
+import { SEVERITY_ORDER, sarifLevel } from "./severity.js";
+import { ANALYZABLE_LANGUAGES_LABEL } from "./detect-utils.js";
+import { remediationFor, remediationForTier, remediationForProfile } from "./remediation.js";
+import { fingerprintFinding } from "./baseline.js";
+import { findingFingerprint } from "./hndl.js";
+/** The per-finding exposure block emitted in JSON / SARIF, or undefined. */
+function exposureFor(f, hndl) {
+    if (!hndl)
+        return undefined;
+    return hndl.byFingerprint.get(findingFingerprint(f));
+}
+/** The repo HNDL summary block shared by JSON output and the SARIF run. */
+function hndlSummaryBlock(hndl) {
+    return {
+        modelVersion: hndl.modelVersion,
+        horizon: hndl.horizon,
+        summary: hndl.summary,
+        assets: hndl.assets,
+    };
+}
+const SARIF_SCHEMA = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
+const INFORMATION_URI = "https://github.com/quantakrypto/pqc-tools";
+/**
+ * Resolve the snippet to emit for a finding, honouring redaction. Sensitive
+ * findings (key material) never expose their snippet; otherwise the snippet is
+ * dropped only when `redactSnippets` is set.
+ */
+function emittedSnippet(f, redactSnippets) {
+    if (redactSnippets || f.sensitive)
+        return undefined;
+    return f.location.snippet;
+}
+/** Map our severity to a SARIF rule-level default (used in rules[].defaultConfiguration). */
+function sarifRank(severity) {
+    switch (severity) {
+        case "critical":
+            return 100;
+        case "high":
+            return 80;
+        case "medium":
+            return 50;
+        case "low":
+            return 20;
+        default:
+            return 5;
+    }
+}
+/** Build a SARIF `rules[]` entry from a rule's severity/title/message/etc. */
+function sarifRule(spec) {
+    return {
+        id: spec.id,
+        name: spec.id,
+        shortDescription: { text: spec.title },
+        fullDescription: { text: spec.message },
+        defaultConfiguration: { level: sarifLevel(spec.severity), rank: sarifRank(spec.severity) },
+        ...(spec.remediation ? { help: { text: `Remediation: ${spec.remediation}` } } : {}),
+        properties: {
+            category: spec.category,
+            ...(spec.algorithm ? { algorithm: spec.algorithm } : {}),
+            hndl: spec.hndl,
+            ...(spec.cwe ? { cwe: spec.cwe, "security-severity": securitySeverity(spec.severity) } : {}),
+            ...(spec.cwe ? { tags: ["security", spec.cwe] } : {}),
+        },
+        ...(spec.cwe
+            ? {
+                relationships: [
+                    { target: { id: spec.cwe, toolComponent: { name: "CWE" } }, kinds: ["relevant"] },
+                ],
+            }
+            : {}),
+    };
+}
+/** SARIF result.properties fragment for a finding's HNDL exposure, or empty. */
+function exposureProperties(exposure) {
+    if (!exposure)
+        return {};
+    return {
+        exposureScore: exposure.exposureScore,
+        dataAsset: exposure.dataAsset,
+        exposureRationale: exposure.rationale,
+    };
+}
+/** Serialize a scan result as SARIF 2.1.0. */
+export function toSarif(result, opts) {
+    const redactSnippets = opts?.redactSnippets ?? false;
+    // Build the rule set and collect the CWE taxa referenced by any rule. When a
+    // full catalog is supplied, advertise every rule (even ones that didn't fire);
+    // otherwise emit one rule per ruleId encountered (the historical behaviour).
+    const ruleIndex = new Map();
+    const rules = [];
+    const cweTaxa = new Set();
+    for (const r of opts?.catalog ?? []) {
+        if (ruleIndex.has(r.id))
+            continue;
+        if (r.cwe)
+            cweTaxa.add(r.cwe);
+        ruleIndex.set(r.id, rules.length);
+        rules.push(sarifRule({
+            id: r.id,
+            title: r.title,
+            message: r.message,
+            severity: r.severity,
+            category: r.category,
+            algorithm: r.algorithm,
+            hndl: r.hndl,
+            cwe: r.cwe,
+            remediation: r.remediation,
+        }));
+    }
+    for (const f of result.findings) {
+        if (f.cwe)
+            cweTaxa.add(f.cwe);
+        if (ruleIndex.has(f.ruleId))
+            continue;
+        ruleIndex.set(f.ruleId, rules.length);
+        rules.push(sarifRule({
+            id: f.ruleId,
+            title: f.title,
+            message: f.message,
+            severity: f.severity,
+            category: f.category,
+            algorithm: f.algorithm,
+            hndl: f.hndl,
+            cwe: f.cwe,
+            remediation: f.remediation,
+        }));
+    }
+    const results = result.findings.map((f) => {
+        const region = { startLine: f.location.line };
+        if (typeof f.location.column === "number")
+            region.startColumn = f.location.column;
+        if (typeof f.location.endLine === "number")
+            region.endLine = f.location.endLine;
+        const snippet = emittedSnippet(f, redactSnippets);
+        return {
+            ruleId: f.ruleId,
+            ruleIndex: ruleIndex.get(f.ruleId),
+            level: sarifLevel(f.severity),
+            message: { text: f.message },
+            // Line-INSENSITIVE fingerprint (the same one the baseline uses:
+            // sha256 of ruleId|file|normalizedSnippet). GitHub code scanning keys
+            // alert identity + dedup off partialFingerprints, so a finding survives
+            // line shifts and reformatting instead of re-alerting as "new" on every
+            // edit above it. `quantakrypto/v1` names our scheme.
+            partialFingerprints: { "quantakrypto/v1": fingerprintFinding(f) },
+            properties: {
+                // Same stable identity mirrored into properties so non-GitHub SARIF
+                // consumers (our platform ingest) can read one uniform `fingerprint`
+                // field across JSON and SARIF without reaching into partialFingerprints.
+                fingerprint: fingerprintFinding(f),
+                category: f.category,
+                severity: f.severity,
+                confidence: f.confidence,
+                hndl: f.hndl,
+                ...(f.algorithm ? { algorithm: f.algorithm } : {}),
+                ...(f.remediation ? { remediation: f.remediation } : {}),
+                ...(f.cwe ? { cwe: f.cwe } : {}),
+                ...exposureProperties(exposureFor(f, opts?.hndl)),
+            },
+            // A result's `taxa` holds reportingDescriptorReference objects directly:
+            // { id, index, guid, toolComponent }. It used to wrap them in `target`,
+            // which is the shape of a reportingDescriptorRelationship (what a RULE
+            // uses in `relationships`), not of a reference. GitHub's code-scanning
+            // upload validates against the real schema and rejected the whole file:
+            // "taxa[0] is not allowed to have the additional property target". Our own
+            // validator did not check inside taxa, so this shipped, and every consumer
+            // following the documented upload-sarif workflow got nothing.
+            ...(f.cwe ? { taxa: [{ id: f.cwe, toolComponent: { name: "CWE" } }] } : {}),
+            locations: [
+                {
+                    physicalLocation: {
+                        artifactLocation: { uri: f.location.file },
+                        region: {
+                            ...region,
+                            ...(snippet ? { snippet: { text: snippet } } : {}),
+                        },
+                    },
+                },
+            ],
+        };
+    });
+    // CWE taxonomy component (SARIF taxonomies), referenced by rules + results.
+    const taxonomies = cweTaxa.size > 0
+        ? [
+            {
+                name: "CWE",
+                informationUri: "https://cwe.mitre.org/",
+                organization: "MITRE",
+                shortDescription: { text: "The MITRE Common Weakness Enumeration" },
+                taxa: [...cweTaxa].sort().map((id) => ({
+                    id,
+                    helpUri: `https://cwe.mitre.org/data/definitions/${id.replace(/^CWE-/, "")}.html`,
+                })),
+            },
+        ]
+        : [];
+    // Run-level properties bag: the repo HNDL summary and/or the compliance-mandate
+    // evaluation, whichever were supplied. Both are additive metadata for SARIF
+    // consumers (our platform ingest, CI) and never affect result identity.
+    const runProperties = {};
+    if (opts?.hndl)
+        runProperties.hndl = hndlSummaryBlock(opts.hndl);
+    if (opts?.mandate)
+        runProperties.mandate = opts.mandate;
+    return {
+        $schema: SARIF_SCHEMA,
+        version: "2.1.0",
+        runs: [
+            {
+                tool: {
+                    driver: {
+                        name: "qScan",
+                        informationUri: INFORMATION_URI,
+                        version: result.toolVersion || VERSION,
+                        rules,
+                    },
+                },
+                ...(taxonomies.length > 0 ? { taxonomies } : {}),
+                ...(Object.keys(runProperties).length > 0 ? { properties: runProperties } : {}),
+                results,
+            },
+        ],
+    };
+}
+/** GitHub-code-scanning `security-severity` (0–10) derived from our severity. */
+function securitySeverity(severity) {
+    switch (severity) {
+        case "critical":
+            return "9.5";
+        case "high":
+            return "8.0";
+        case "medium":
+            return "5.0";
+        case "low":
+            return "3.0";
+        default:
+            return "1.0";
+    }
+}
+/** Serialize a scan result as a plain JSON-friendly object. */
+export function toJson(result, opts) {
+    const redactSnippets = opts?.redactSnippets ?? false;
+    const hndl = opts?.hndl;
+    return {
+        toolVersion: result.toolVersion,
+        root: result.root,
+        startedAt: result.startedAt,
+        finishedAt: result.finishedAt,
+        filesScanned: result.filesScanned,
+        ...(result.analyzedFiles !== undefined ? { analyzedFiles: result.analyzedFiles } : {}),
+        ...(result.diagnostics ? { diagnostics: result.diagnostics } : {}),
+        inventory: {
+            readinessScore: result.inventory.readinessScore,
+            hndlCount: result.inventory.hndlCount,
+            bySeverity: result.inventory.bySeverity,
+            byCategory: result.inventory.byCategory,
+            byAlgorithm: result.inventory.byAlgorithm,
+            // The actual inventory: every algorithm found, safe and unsafe. The
+            // counts above are derived from findings, so on their own they can only
+            // describe what is wrong. Omitted when empty rather than sent as [], so a
+            // consumer can tell "scanned, found no cryptography" from "produced by a
+            // version that predates this".
+            ...(result.inventory.assets?.length ? { assets: result.inventory.assets } : {}),
+        },
+        ...(hndl ? { hndl: hndlSummaryBlock(hndl) } : {}),
+        // Compliance-mandate evaluation (`--mandate`): the machine-readable verdicts
+        // + summary, so a CI job can gate/report on them without re-parsing the human
+        // block. Carries the org `--policy` composition (policyVerdict / acknowledged)
+        // when one was supplied.
+        ...(opts?.mandate ? { mandateMapping: opts.mandate } : {}),
+        findings: result.findings.map((f) => {
+            const exposure = exposureFor(f, hndl);
+            return {
+                // Stable, line-INSENSITIVE identity of the finding: sha256 of
+                // ruleId | normalized-POSIX-repo-relative-path | normalized-snippet
+                // (the SARIF partialFingerprints trick, line number deliberately
+                // excluded). Reused verbatim from the baseline module so JSON identity,
+                // SARIF partialFingerprints, and the baseline suppression set are one and
+                // the same value. A line move does NOT change it; when no snippet context
+                // exists it falls back to ruleId|path. This is the cross-run identity the
+                // platform keys posture drift on.
+                fingerprint: fingerprintFinding(f),
+                ruleId: f.ruleId,
+                title: f.title,
+                category: f.category,
+                severity: f.severity,
+                confidence: f.confidence,
+                algorithm: f.algorithm,
+                hndl: f.hndl,
+                message: f.message,
+                remediation: f.remediation,
+                cwe: f.cwe,
+                location: {
+                    file: f.location.file,
+                    line: f.location.line,
+                    column: f.location.column,
+                    endLine: f.location.endLine,
+                    snippet: emittedSnippet(f, redactSnippets),
+                },
+                ...(exposure
+                    ? {
+                        exposure: {
+                            fingerprint: exposure.fingerprint,
+                            exposureScore: exposure.exposureScore,
+                            dataAsset: exposure.dataAsset,
+                            rationale: exposure.rationale,
+                        },
+                    }
+                    : {}),
+            };
+        }),
+    };
+}
+/* -------------------------------------------------------------------------- */
+/* Human-readable summary                                                      */
+/* -------------------------------------------------------------------------- */
+/** Raw ANSI codes (no chalk). Disabled when colour is off. */
+const ANSI = {
+    reset: "\x1b[0m",
+    bold: "\x1b[1m",
+    dim: "\x1b[2m",
+    red: "\x1b[31m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m",
+    magenta: "\x1b[35m",
+    cyan: "\x1b[36m",
+};
+function severityColor(sev) {
+    switch (sev) {
+        case "critical":
+            return ANSI.magenta;
+        case "high":
+            return ANSI.red;
+        case "medium":
+            return ANSI.yellow;
+        case "low":
+            return ANSI.blue;
+        default:
+            return ANSI.dim;
+    }
+}
+function scoreColor(score) {
+    if (score >= 80)
+        return ANSI.green;
+    if (score >= 50)
+        return ANSI.yellow;
+    return ANSI.red;
+}
+/**
+ * Render a human-readable summary of a scan result. Colour is off by default;
+ * pass `{ color: true }` to emit ANSI escape codes.
+ */
+export function formatSummary(result, options) {
+    const color = options?.color ?? false;
+    const c = (code, text) => (color ? `${code}${text}${ANSI.reset}` : text);
+    const lines = [];
+    const inv = result.inventory;
+    lines.push(c(ANSI.bold, "qScan — post-quantum readiness report"));
+    lines.push(c(ANSI.dim, `tool v${result.toolVersion} · root: ${result.root}`));
+    lines.push("");
+    // Readiness score banner.
+    lines.push(`Readiness score: ${c(`${ANSI.bold}${scoreColor(inv.readinessScore)}`, `${inv.readinessScore}/100`)}`);
+    const analyzed = result.analyzedFiles !== undefined
+        ? `   Analyzed (${ANALYZABLE_LANGUAGES_LABEL}): ${result.analyzedFiles}`
+        : "";
+    lines.push(`Files scanned:   ${result.filesScanned}${analyzed}   Findings: ${result.findings.length}   HNDL-exposed: ${c(inv.hndlCount > 0 ? ANSI.red : ANSI.green, String(inv.hndlCount))}`);
+    // Coverage honesty: a score over zero analyzable files is not a clean bill of health.
+    if (result.analyzedFiles === 0 && result.filesScanned > 0) {
+        lines.push(c(ANSI.yellow, `Note: 0 files were in a supported source language (${ANALYZABLE_LANGUAGES_LABEL}) — the readiness score does not reflect this codebase.`));
+    }
+    // Coverage diagnostics: skipped files mean the finding count may be incomplete.
+    const diag = result.diagnostics;
+    if (diag && (diag.unreadable > 0 || diag.skippedMinified > 0)) {
+        lines.push(c(ANSI.yellow, `Coverage: ${diag.unreadable} unreadable, ${diag.skippedMinified} skipped as minified — results may be incomplete.`));
+    }
+    lines.push("");
+    // Severity breakdown.
+    const sevParts = SEVERITY_ORDER.filter((s) => inv.bySeverity[s] > 0).map((s) => c(severityColor(s), `${s}: ${inv.bySeverity[s]}`));
+    lines.push(`By severity:  ${sevParts.length ? sevParts.join("   ") : c(ANSI.green, "none")}`);
+    // Algorithm breakdown.
+    const algoParts = Object.entries(inv.byAlgorithm)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, v]) => `${k}: ${v}`);
+    if (algoParts.length)
+        lines.push(`By algorithm: ${algoParts.join("   ")}`);
+    lines.push("");
+    if (result.findings.length === 0) {
+        lines.push(c(ANSI.green, "No classical asymmetric cryptography detected. ✓"));
+        return lines.join("\n");
+    }
+    // Top findings, grouped by severity (most severe first), capped for readability.
+    const sorted = [...result.findings].sort((a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
+    const MAX_SHOWN = 25;
+    lines.push(c(ANSI.bold, `Top findings (${Math.min(MAX_SHOWN, sorted.length)} of ${sorted.length}):`));
+    for (const f of sorted.slice(0, MAX_SHOWN)) {
+        const loc = `${f.location.file}:${f.location.line}${f.location.column ? `:${f.location.column}` : ""}`;
+        const tag = c(severityColor(f.severity), `[${f.severity}]`);
+        const hndl = f.hndl ? c(ANSI.red, " (HNDL)") : "";
+        lines.push(`  ${tag} ${f.title}${hndl}`);
+        lines.push(c(ANSI.dim, `      ${loc} — ${f.message}`));
+        if (f.remediation)
+            lines.push(c(ANSI.cyan, `      → ${f.remediation}`));
+    }
+    if (sorted.length > MAX_SHOWN) {
+        lines.push(c(ANSI.dim, `  …and ${sorted.length - MAX_SHOWN} more.`));
+    }
+    lines.push("");
+    if (inv.hndlCount > 0) {
+        lines.push(c(ANSI.yellow, `Note: ${inv.hndlCount} finding(s) are exposed to "harvest now, decrypt later" — ` +
+            "encrypted traffic captured today can be decrypted once a quantum computer exists. " +
+            "Prioritise migrating key exchange / encryption to hybrid PQC (X25519MLKEM768)."));
+    }
+    if (options?.tier) {
+        lines.push("", ...formatTierGuidance(inv.byAlgorithm, options.tier));
+    }
+    return lines.join("\n");
+}
+/**
+ * Per-family migration targets for a CNSA security tier — surfaces the otherwise
+ * library-only {@link remediationForTier} in human reports. Category 5 shows the
+ * ML-KEM-1024 / ML-DSA-87 sets CNSA 2.0 mandates for national-security systems and
+ * long-lived secrets. Returns plain (un-coloured) lines; the caller styles them.
+ */
+export function formatTierGuidance(byAlgorithm, tier) {
+    const label = tier === "category-5" ? "CNSA 2.0 (Category 5)" : "Category 3 (commercial)";
+    const out = [`${label} migration targets:`];
+    const seen = new Set();
+    for (const [k, n] of Object.entries(byAlgorithm)) {
+        if (n <= 0)
+            continue;
+        const fam = k;
+        if (fam === "unknown" || !remediationFor(fam))
+            continue; // skip unmapped families
+        const rem = remediationForTier(fam, tier);
+        if (seen.has(rem.recommendation))
+            continue;
+        seen.add(rem.recommendation);
+        out.push(`  ${fam} → ${rem.recommendation}`);
+    }
+    if (tier === "category-5") {
+        out.push("  CNSA 2.0 mandates ML-KEM-1024 / ML-DSA-87 for national-security systems and long-lived secrets (2030/2033 milestones).");
+    }
+    return out;
+}
+/**
+ * Per-family migration targets tailored to a selected {@link StandardsProfile}
+ * (`--profile`). Unlike {@link formatTierGuidance} (CNSA-tier only), this surfaces the
+ * regime's parameter sets AND its hybrid stance — required (ANSSI/BSI) vs recommended
+ * (NIST/NCSC) vs optional (CNSA 2.0) — so guidance isn't regime-wrong. Returns plain
+ * (un-coloured) lines; the caller styles them.
+ */
+export function formatProfileGuidance(byAlgorithm, profile) {
+    const out = [`${profile.name} migration targets:`];
+    const seen = new Set();
+    for (const [k, n] of Object.entries(byAlgorithm)) {
+        if (n <= 0)
+            continue;
+        const fam = k;
+        if (fam === "unknown" || !remediationFor(fam))
+            continue; // skip unmapped families
+        const rem = remediationForProfile(fam, profile);
+        if (seen.has(rem.recommendation))
+            continue;
+        seen.add(rem.recommendation);
+        out.push(`  ${fam} → ${rem.recommendation}`);
+    }
+    const stance = profile.hybridStance === "required"
+        ? "requires classical+PQC hybridization"
+        : profile.hybridStance === "recommended"
+            ? "recommends hybridization"
+            : "does not require hybridization";
+    out.push(`  ${profile.authority} ${stance}; classical public-key crypto disallowed after ${profile.disallowAfter} (${profile.citation}).`);
+    return out;
+}
+//# sourceMappingURL=report.js.map

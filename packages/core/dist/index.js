@@ -1,0 +1,85 @@
+/**
+ * @quantakrypto/core — public API (LOCKED CONTRACT).
+ *
+ * The exported NAMES and SIGNATURES below are the stable contract that
+ * @quantakrypto/qscan, @quantakrypto/mcp and the GitHub Action depend on — do not change
+ * them without updating all consumers. The implementations live in focused
+ * modules under src/ and are re-exported here; the public surface is identical
+ * to the original stub file.
+ */
+export * from "./types.js";
+// Tool version, surfaced in reports. Keep in sync with package.json.
+export { VERSION } from "./version.js";
+// Core orchestration + built-in detector set.
+export { scan, detectors, detectFile, compareFindings } from "./scan.js";
+// Snippet-level fix verification (shared by MCP verify_fix + remediation).
+export { verifyFix, languageToExtension } from "./verify.js";
+export { buildContext, renderPreflight } from "./redact.js";
+export { TRIAGE_RUBRIC, TRIAGE_VERDICT_SCHEMA, buildTriageRequest } from "./triage.js";
+export { REMEDIATE_RUBRIC, FIX_REQUEST_SCHEMA, buildRemediateRequest, } from "./remediate-request.js";
+export { checkPatchPolicy } from "./patch-policy.js";
+export { withWorktree } from "./worktree.js";
+export { codemodRegistry, codemodFor } from "./codemods/registry.js";
+export { configToggleCodemod } from "./codemods/config-toggle.js";
+export { remediateFindings } from "./remediate-pipeline.js";
+// Scan cancellation / work-budget errors.
+export { AbortError, BudgetExceededError } from "./errors.js";
+// Parallel scanning (worker_threads pool). The chunk/merge helpers and their
+// SizedFile/ChunkResult types are internal plumbing (not part of the public API).
+export { scanParallel } from "./parallel.js";
+// Detector registry (plugin point). `detectorScope` and the rule-catalog type are
+// internal.
+export { DetectorRegistry, defaultRegistry } from "./registry.js";
+// Canonical baseline (shared by qScan + the Action).
+export { fingerprintFinding, baselineFromFindings, applyBaseline, loadBaseline, saveBaseline, BASELINE_VERSION, } from "./baseline.js";
+// Incremental scanning: changed-files helper (git-aware, tolerant).
+export { changedFiles } from "./changed.js";
+// Optional `quantakrypto.config.json` loader (P2-9; see docs/CONFIG.md).
+export { loadConfig, ConfigError, CONFIG_FILENAME } from "./config.js";
+// HNDL (harvest-now-decrypt-later) data-risk quantifier (see docs/HNDL.md).
+export { HNDL_MODEL_VERSION, HNDL_FILENAME, SEVERITY_VULNERABILITY, CONFIDENCE_WEIGHT, CLASSIFICATION_SENSITIVITY, NON_HNDL_DISCOUNT, DEFAULT_QUANTUM_THREAT_YEARS, DEFAULT_MIGRATION_HORIZON_YEARS, DEFAULT_UNBOUND_CLASSIFICATION, HndlError, computeHndl, vulnerabilityFactor, moscaFactor, globMatch, findingFingerprint, findingScope, parseHndlMap, loadHndlMap, scaffoldHndlYaml, } from "./hndl.js";
+// Filesystem walker (relative POSIX paths, default ignores, size/binary filters).
+export { walkFiles, isBinaryPath, looksMinified } from "./walk.js";
+// Analyzable-language coverage (which source languages the scanner inspects).
+export { isAnalyzableSource, ANALYZABLE_SOURCE_EXTENSIONS, ANALYZABLE_LANGUAGES_LABEL, } from "./detect-utils.js";
+// Inventory + readiness score.
+export { buildInventory } from "./inventory.js";
+// Vulnerable-dependency database (the manifest scanner is used internally by scan()).
+// `DEP_VULNERABLE_RULE` is the generic catalog entry for dependency findings
+// (which don't come from a Detector, so aren't in the registry's rule catalog).
+export { vulnerableDependencies, DEP_VULNERABLE_RULE, isManifestFile } from "./dependencies.js";
+// Dependency-advisory scanning (opt-in via `qscan --audit`): shells out to each
+// ecosystem's own audit tool. `DEP_ADVISORY_RULE` is the generic SARIF catalog
+// entry (advisory findings don't come from a Detector).
+export { scanAdvisories, DEP_ADVISORY_RULE } from "./advisories.js";
+// Provenance / declared-source-repository check (opt-in via `qscan --audit`). The
+// network HEAD request is INJECTED by the (networked) caller so core stays
+// offline (ADR-0005). `PROVENANCE_RULES` are its generic SARIF catalog entries.
+export { checkProvenance, normalizeRepoUrl, PROVENANCE_RULES } from "./provenance.js";
+// Severity utilities (ordering, threshold, SARIF level) — shared across tools.
+export { SEVERITY_ORDER, severityRank, meetsThreshold, sarifLevel } from "./severity.js";
+// Reporters.
+export { toSarif, toJson, formatSummary, formatTierGuidance, formatProfileGuidance, } from "./report.js";
+// CycloneDX 1.6 cryptographic bill of materials (CBOM) export.
+export { toCbom } from "./cbom.js";
+// Merge multiple CBOMs (code + infra + live endpoints) into one combined BOM.
+export { mergeCboms } from "./cbom-merge.js";
+// OpenVEX 0.2.0 export — quantum-readiness posture as VEX statements.
+export { toOpenVex } from "./vex.js";
+// Crypto-agility manifest: agent-consumable crypto-posture document.
+export { buildCryptoAgilityManifest, validateCryptoAgilityManifest, CRYPTO_AGILITY_MANIFEST_VERSION, CRYPTO_AGILITY_WELL_KNOWN_PATH, } from "./crypto-agility.js";
+// ISO/IEC 27001 A.8.24 evidence-chain readiness report.
+export { buildReadinessReport, signReadinessReport, verifyReadinessReport } from "./evidence.js";
+// Cryptography policy → per-finding verdicts (A.8.24 evidence §4).
+export { buildPolicyMapping, parseCryptoPolicy } from "./policy.js";
+// Compliance mandates → dated, clause-named verdicts + gate (policy-as-code).
+export { MANDATES, mandateIds, getMandate, assertKnownMandates, evaluateMandates, mandateGateFails, } from "./mandates.js";
+// Remediation lookup (family + tier-aware + profile-aware) and stateful-HBS guidance.
+export { remediationFor, remediationForTier, remediationForProfile, TIER_PARAMS, STATEFUL_HBS_NOTE, PQC_TRANSITION_NOTE, statefulHbsApplies, } from "./remediation.js";
+// Post-quantum standards source of truth + review cadence.
+export { PQC_STANDARDS } from "./standards.js";
+// Selectable standards regime profiles (NIST / CNSA / BSI / ANSSI / NCSC).
+export { STANDARDS_PROFILES, DEFAULT_PROFILE_ID, standardsProfileIds, getStandardsProfile, defaultStandardsProfile, } from "./standards-profiles.js";
+// CWE identifier constants.
+export { CWE_BROKEN_CRYPTO, CWE_WEAK_STRENGTH, CWE_CERT_VALIDATION, CWE_HARDCODED_KEY, CWE_RISKY_PRIMITIVE, } from "./cwe.js";
+//# sourceMappingURL=index.js.map

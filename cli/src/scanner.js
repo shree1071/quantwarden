@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Resolve pqc-tools core engine
 const possiblePaths = [
+    path.resolve(__dirname, "../../packages/core/dist/index.js"),
     path.resolve(__dirname, "../../pqc-tools/packages/core/dist/index.js"),
     path.resolve(process.env.USERPROFILE || "C:/Users/shree", "pqc-tools/packages/core/dist/index.js")
 ];

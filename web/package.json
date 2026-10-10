@@ -23,6 +23,7 @@
   "author": "FULCRUM",
   "license": "Apache-2.0",
   "dependencies": {
-    "@google/genai": "^2.24.0"
+    "@google/genai": "^2.24.0",
+    "@quantakrypto/core": "file:../packages/core"
   }
 }
