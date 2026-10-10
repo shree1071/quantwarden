@@ -1,5 +1,5 @@
 import tls from "node:tls";
-import { runProbe, toCbomReport, toSarifReport } from "file:///C:/Users/shree/pqc-tools/packages/qprobe/dist/index.js";
+import { runProbe, toCbomReport, toSarifReport } from "./lib/qprobe/index.js";
 
 /**
  * Clean & normalize input into hostname and port

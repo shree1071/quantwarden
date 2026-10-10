@@ -297,7 +297,8 @@ async function handleProbe(target, args) {
     renderBanner("QUANTGUARD LIVE DOMAIN PROBE", `Target: ${domain}:${port}`);
     console.log(`  ${c.muted}Initiating TLS 1.3 ClientHello (0x11EC X25519MLKEM768) handshake...${c.reset}`);
 
-    const { probeDomain } = await import("file:///C:/Users/shree/quantguard-domain-scanner/src/probe-engine.js");
+    const probeModuleUrl = new URL("../../web/src/probe-engine.js", import.meta.url).href;
+    const { probeDomain } = await import(probeModuleUrl);
     const result = await probeDomain(domain, { port });
 
     if (result.status === "error") {
@@ -307,7 +308,8 @@ async function handleProbe(target, args) {
 
     if (!skipAi) {
         console.log(`  ${c.muted}Analyzing telemetry with Google Gemini 3.8 Flash AI...${c.reset}\n`);
-        const { generateDomainAnalysis } = await import("file:///C:/Users/shree/quantguard-domain-scanner/src/ai-engine.js");
+        const aiModuleUrl = new URL("../../web/src/ai-engine.js", import.meta.url).href;
+        const { generateDomainAnalysis } = await import(aiModuleUrl);
         result.ai = await generateDomainAnalysis(result);
     }
 
@@ -349,7 +351,8 @@ async function handleWeb(args) {
     renderBanner("QUANTGUARD DOMAIN SENTINEL WEB DASHBOARD", "Framer PQC Sentinel Platform");
     console.log(`  ${c.muted}Booting high-performance Node.js PQC scanning server...${c.reset}`);
 
-    const { startServer } = await import("file:///C:/Users/shree/quantguard-domain-scanner/src/server.js");
+    const serverModuleUrl = new URL("../../web/src/server.js", import.meta.url).href;
+    const { startServer } = await import(serverModuleUrl);
     await startServer(port);
 
     console.log(`  ${c.success}●${c.reset} ${c.bold}Web Dashboard running:${c.reset} ${c.blue}http://localhost:${port}${c.reset}`);

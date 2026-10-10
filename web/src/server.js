@@ -27,7 +27,7 @@ function getMimeType(filePath) {
     return map[ext] || "application/octet-stream";
 }
 
-const server = http.createServer(async (req, res) => {
+export async function handleRequest(req, res) {
     const reqUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     const pathname = reqUrl.pathname;
 
@@ -174,9 +174,10 @@ const server = http.createServer(async (req, res) => {
         } else {
             res.writeHead(404);
             res.end("Not Found");
-        }
     }
-});
+}
+
+export const server = http.createServer(handleRequest);
 
 export function startServer(port = PORT) {
     return new Promise((resolve) => {
