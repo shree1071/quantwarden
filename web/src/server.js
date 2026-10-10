@@ -174,6 +174,7 @@ export async function handleRequest(req, res) {
         } else {
             res.writeHead(404);
             res.end("Not Found");
+        }
     }
 }
 
