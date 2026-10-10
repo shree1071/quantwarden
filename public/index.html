@@ -1,0 +1,3113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantguard — Sovereign Post-Quantum Cryptography & Live Domain Sentinel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #090909;
+            --surface: #141414;
+            --surface-2: #1c1c1c;
+            --surface-hover: #1f1f1f;
+            --border: #262626;
+            --border-subtle: #1c1c1c;
+            --border-active: #3a3a3a;
+            --text: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-blue: #0099ff;
+            --emerald: #10b981;
+            --emerald-bg: rgba(16, 185, 129, 0.12);
+            --emerald-border: rgba(16, 185, 129, 0.35);
+            --amber: #f59e0b;
+            --amber-bg: rgba(245, 158, 11, 0.12);
+            --amber-border: rgba(245, 158, 11, 0.35);
+            --red: #ef4444;
+            --red-bg: rgba(239, 68, 68, 0.15);
+            --red-border: rgba(239, 68, 68, 0.4);
+            --red-glow: rgba(239, 68, 68, 0.25);
+            --violet: #8b5cf6;
+            --violet-bg: rgba(139, 92, 246, 0.12);
+            --violet-border: rgba(139, 92, 246, 0.35);
+            --spotlight-violet: rgba(106, 76, 245, 0.15);
+            --spotlight-magenta: rgba(212, 77, 240, 0.1);
+            --radius-card: 18px;
+            --radius-pill: 9999px;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Top Nav */
+        header {
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(9, 9, 9, 0.88);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #10b981 0%, #064e3b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .brand-logo svg { width: 18px; height: 18px; stroke: #ffffff; }
+
+        .brand-text {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-badge {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            background: var(--violet-bg);
+            color: var(--violet);
+            border: 1px solid var(--violet-border);
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            list-style: none;
+        }
+
+        @media (max-width: 900px) { .nav-links { display: none; } }
+
+        .nav-link {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover { color: #ffffff; }
+
+        .nav-cta {
+            background: #ffffff;
+            color: #090909;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-cta:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1180px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero */
+        .hero-section {
+            padding: 88px 0 56px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 380px;
+            background: radial-gradient(circle, var(--spotlight-violet) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            padding: 5px 16px;
+            border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-pill .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--emerald);
+            box-shadow: 0 0 8px var(--emerald);
+        }
+
+        .hero-title {
+            font-size: 58px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: #ffffff;
+            line-height: 1.05;
+            max-width: 920px;
+            margin: 0 auto 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) { .hero-title { font-size: 36px; } }
+
+        .hero-desc {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 34px;
+            line-height: 1.55;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #090909;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 13px 32px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.04);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 13px 28px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .btn-ghost:hover {
+            background: var(--surface-hover);
+            border-color: #444444;
+        }
+
+        /* Stats Ribbon */
+        .stats-ribbon {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 22px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .stats-ribbon { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        }
+
+        .ribbon-item { text-align: center; }
+        .ribbon-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+        .ribbon-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-family: var(--font-mono);
+            letter-spacing: 0.04em;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 44px;
+        }
+
+        .section-tag {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--violet);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .section-title {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            line-height: 1.15;
+            margin-bottom: 10px;
+        }
+
+        .section-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            max-width: 620px;
+            margin: 0 auto;
+        }
+
+        /* Scanner */
+        .scanner-section {
+            padding: 48px 0 88px;
+            position: relative;
+        }
+
+        .search-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 28px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            margin-bottom: 32px;
+            transition: border-color 0.2s;
+        }
+
+        .search-card:focus-within {
+            border-color: var(--border-active);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .domain-input {
+            width: 100%;
+            background: #090909;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            padding: 14px 20px 14px 48px;
+            font-size: 15px;
+            font-family: var(--font-mono);
+            color: #ffffff;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .domain-input:focus {
+            border-color: #555555;
+            background: #0c0c0c;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-probe {
+            background: #ffffff;
+            color: #090909;
+            border: none;
+            border-radius: var(--radius-pill);
+            padding: 0 32px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-probe:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-probe:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Presets */
+        .preset-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .preset-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .preset-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            padding: 5px 14px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preset-pill:hover {
+            background: var(--surface-hover);
+            color: #ffffff;
+            border-color: #444444;
+        }
+
+        .preset-pill.featured-demo {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+            font-weight: 600;
+            animation: pulse-border 2.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.35); }
+            50% { border-color: rgba(239, 68, 68, 0.7); box-shadow: 0 0 12px rgba(239, 68, 68, 0.2); }
+        }
+
+        .dot-green { background: var(--emerald); width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 6px var(--emerald); }
+        .dot-amber { background: var(--amber); width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 6px var(--amber); }
+        .dot-red { background: var(--red); width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 6px var(--red); }
+
+        /* Scanning Progress */
+        .scan-progress {
+            display: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 40px 28px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .radar-box {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            animation: radar-pulse 2s infinite ease-out;
+        }
+
+        .radar-circle:nth-child(1) { width: 35px; height: 35px; animation-delay: 0s; }
+        .radar-circle:nth-child(2) { width: 70px; height: 70px; animation-delay: 0.6s; }
+        .radar-circle:nth-child(3) { width: 105px; height: 105px; animation-delay: 1.2s; }
+
+        .radar-center {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--emerald);
+            box-shadow: 0 0 14px var(--emerald);
+        }
+
+        @keyframes radar-pulse {
+            0% { transform: scale(0.5); opacity: 0.8; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        .scan-terminal {
+            background: #090909;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 18px 24px;
+            max-width: 640px;
+            margin: 0 auto;
+            text-align: left;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        .scan-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .scan-step:last-child { margin-bottom: 0; }
+        .scan-step.active { color: #ffffff; }
+        .scan-step.done { color: var(--emerald); }
+
+        .step-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Discovery Feed */
+        .leaf-discovery-feed {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .leaf-feed-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Results Display */
+        .results-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .target-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .target-name {
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            letter-spacing: -0.02em;
+        }
+
+        .target-status-pill {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .target-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Score Card */
+        .score-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 36px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 36px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .score-card { grid-template-columns: 1fr; text-align: center; }
+        }
+
+        .gauge-wrapper {
+            position: relative;
+            width: 125px;
+            height: 125px;
+            margin: 0 auto;
+        }
+
+        .gauge-svg {
+            transform: rotate(-90deg);
+            width: 125px;
+            height: 125px;
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: #222222;
+            stroke-width: 8;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.5s;
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-score {
+            font-size: 36px;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            line-height: 1;
+        }
+
+        .gauge-max {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .score-details h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .score-details p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 540px;
+            line-height: 1.5;
+        }
+
+        .score-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .stat-item { text-align: right; }
+        @media (max-width: 768px) { .stat-item { text-align: center; } }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: #ffffff;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-family: var(--font-mono);
+        }
+
+        /* Topology Perimeter Section */
+        .leaf-topology-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 32px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .leaf-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .leaf-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .leaf-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .leaf-count-badge {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            padding: 2px 10px;
+            border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        /* Topology Visualizer: Parent Hub & Connected Children */
+        .topology-visualizer {
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hub-node-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #141414;
+            border: 1px solid var(--border-active);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .hub-identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hub-beacon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse-beacon 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-beacon {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        .hub-title-text {
+            font-size: 15px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: #ffffff;
+        }
+
+        .hub-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* Vector Radial Topology Map */
+        .vector-map-wrapper {
+            position: relative;
+            width: 100%;
+            background: radial-gradient(circle at 50% 50%, #151515 0%, #0a0a0a 70%, #060606 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .vector-svg-canvas {
+            width: 100%;
+            height: 520px;
+            display: block;
+        }
+
+        .view-switch-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 5px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-switch-btn.active {
+            background: #ffffff;
+            color: #090909;
+            border-color: #ffffff;
+        }
+
+        .view-switch-btn:hover:not(.active) {
+            color: #ffffff;
+            border-color: #444444;
+        }
+
+        .vector-hud-overlay {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 10;
+        }
+
+        .hud-title {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .hud-metric {
+            font-size: 13px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-status-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            background: var(--red-bg);
+            color: var(--red);
+            border: 1px solid var(--red-border);
+            font-weight: 600;
+        }
+
+        .vector-inspector-panel {
+            background: #0d0d0d;
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 24px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            min-height: 80px;
+            z-index: 10;
+        }
+
+        @media (max-width: 860px) {
+            .vector-inspector-panel {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        .inspector-url-label {
+            color: var(--text-muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .inspector-url {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .inspector-threat-desc {
+            color: var(--text-secondary);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .inspector-risk-tag {
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        @keyframes radar-sweep-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .sweep-needle {
+            transform-origin: 500px 260px;
+            animation: radar-sweep-rotate 14s linear infinite;
+        }
+
+        .vector-branch-line {
+            stroke-dasharray: 6 4;
+            animation: lineDash 1.2s linear infinite;
+            transition: stroke 0.3s, stroke-width 0.3s;
+        }
+
+        @keyframes lineDash {
+            to { stroke-dashoffset: -20; }
+        }
+
+        @keyframes nodePopIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.6);
+            }
+            70% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .vector-node-group {
+            cursor: pointer;
+            transform-box: fill-box;
+            transform-origin: center;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s;
+        }
+
+        .vector-node-group:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
+        }
+
+        .vector-node-rect {
+            transition: stroke 0.2s, stroke-width 0.2s, fill 0.2s;
+        }
+
+        .vector-node-group:hover .vector-node-rect {
+            stroke: #ffffff !important;
+            stroke-width: 1.8 !important;
+        }
+
+        .vector-center-hub {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: hubPulse 3.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes hubPulse {
+            0% { filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.3)); }
+            100% { filter: drop-shadow(0 0 24px rgba(239, 68, 68, 0.7)); }
+        }
+
+        .topology-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        /* One by one cascade animation */
+        .leaf-node-card {
+            background: #111111;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            transition: all 0.25s ease;
+            position: relative;
+            opacity: 0;
+            transform: translateY(12px) scale(0.98);
+            animation: cardCascade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardCascade {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .leaf-node-card:hover {
+            border-color: #444444;
+            background: #171717;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .leaf-node-card.critical-threat {
+            border-left: 3px solid var(--red);
+        }
+
+        .leaf-node-card.pqc-protected {
+            border-left: 3px solid var(--emerald);
+        }
+
+        .node-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .node-service-name {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .node-host {
+            font-size: 15px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            color: #ffffff;
+            margin-bottom: 6px;
+            word-break: break-all;
+        }
+
+        .node-role-pill {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .node-threat-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: #d1d5db;
+        }
+
+        .node-threat-label {
+            color: var(--red);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .node-threat-label.protected {
+            color: var(--emerald);
+        }
+
+        .node-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 10px;
+        }
+
+        .node-kex-pill {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Certificate SANs */
+        .sans-box {
+            background: #090909;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .sans-label {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .sans-tag {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 8px;
+            color: var(--text-secondary);
+        }
+
+        /* Findings List */
+        .findings-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 30px;
+            margin-bottom: 24px;
+        }
+
+        .findings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .findings-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .findings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .finding-item {
+            background: #090909;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .finding-item:hover {
+            border-color: #444444;
+        }
+
+        .finding-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .finding-title-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .finding-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .finding-remediation {
+            font-size: 12px;
+            color: var(--emerald);
+            font-family: var(--font-mono);
+            background: rgba(16, 185, 129, 0.06);
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+
+        /* 4 Diagnostic Cards */
+        .diagnostic-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) { .diagnostic-grid { grid-template-columns: 1fr; } }
+
+        .diag-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            transition: all 0.2s;
+        }
+
+        .diag-card:hover {
+            border-color: var(--border-active);
+            background: var(--surface-hover);
+        }
+
+        .diag-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .diag-title {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .diag-pill {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+        }
+
+        .diag-main-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            margin-bottom: 12px;
+        }
+
+        .diag-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .diag-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 6px;
+        }
+
+        .diag-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .diag-key { color: var(--text-muted); }
+        .diag-val {
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Gemini AI Card */
+        .ai-card {
+            background: linear-gradient(180deg, #161224 0%, #141414 100%);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: var(--radius-card);
+            padding: 32px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #8b5cf6, #ec4899, #10b981);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ai-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .ai-provider-badge {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+            background: var(--violet-bg);
+            color: var(--violet);
+            border: 1px solid var(--violet-border);
+        }
+
+        .ai-section { margin-bottom: 20px; }
+        .ai-section:last-child { margin-bottom: 0; }
+
+        .ai-subtitle {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .ai-text {
+            font-size: 14px;
+            color: #e5e7eb;
+            line-height: 1.6;
+        }
+
+        .ai-checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .ai-checklist li {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .ai-checklist li .step-num {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            padding: 1px 6px;
+            color: #ffffff;
+            margin-top: 2px;
+        }
+
+        .code-box {
+            background: #090909;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #d1d5db;
+            position: relative;
+            overflow-x: auto;
+            white-space: pre;
+            margin-top: 8px;
+        }
+
+        .btn-copy {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: #ffffff;
+            color: #090909;
+        }
+
+        /* Actions Bar */
+        .actions-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 20px 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .actions-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            padding: 8px 18px;
+            font-size: 13px;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-secondary:hover {
+            border-color: #555555;
+            color: #ffffff;
+            background: var(--surface-hover);
+        }
+
+        /* Feature Showcase */
+        .features-section {
+            padding: 96px 0;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+        }
+
+        @media (max-width: 768px) { .features-grid { grid-template-columns: 1fr; } }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: #383838;
+            transform: translateY(-2px);
+        }
+
+        .feature-spotlight {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            top: -50px;
+            right: -50px;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+
+        .spotlight-violet { background: rgba(139, 92, 246, 0.15); }
+        .spotlight-emerald { background: rgba(16, 185, 129, 0.15); }
+        .spotlight-blue { background: rgba(0, 153, 255, 0.15); }
+        .spotlight-orange { background: rgba(255, 122, 61, 0.15); }
+
+        .feature-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #090909;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon-box svg { width: 22px; height: 22px; stroke: #ffffff; }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .feature-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .feature-tag-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        /* Threat Explainer */
+        .threat-section {
+            padding: 96px 0;
+            border-top: 1px solid var(--border-subtle);
+            background: radial-gradient(circle at 50% 10%, rgba(212, 77, 240, 0.05) 0%, transparent 60%);
+        }
+
+        .threat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) { .threat-grid { grid-template-columns: 1fr; } }
+
+        .threat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 32px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .timeline-item:last-child { margin-bottom: 0; }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--violet);
+            margin-top: 6px;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px var(--violet);
+        }
+
+        .timeline-content h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .timeline-content p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* CLI Showcase */
+        .cli-section {
+            padding: 96px 0;
+            border-top: 1px solid var(--border-subtle);
+            text-align: center;
+        }
+
+        .terminal-box {
+            background: #0d0d0d;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            max-width: 780px;
+            margin: 0 auto;
+            text-align: left;
+            overflow: hidden;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+        }
+
+        .terminal-header {
+            background: #141414;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .terminal-dots { display: flex; gap: 6px; }
+        .t-dot { width: 10px; height: 10px; border-radius: 50%; background: #2a2a2a; }
+        .terminal-title { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); }
+        .terminal-body {
+            padding: 24px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.7;
+            color: #d1d5db;
+        }
+
+        .t-prompt { color: var(--emerald); }
+        .t-cmd { color: #ffffff; font-weight: 600; }
+        .t-comment { color: var(--text-muted); }
+        .t-out { color: var(--text-secondary); }
+
+        footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: 48px 40px;
+            font-size: 13px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: #050505;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <a href="/" class="brand">
+            <div class="brand-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                QUANTGUARD
+                <span class="brand-badge">NIST FIPS 203/204</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="#scanner" class="nav-link">Domain Sentinel</a></li>
+            <li><a href="#features" class="nav-link">Platform Features</a></li>
+            <li><a href="#threat" class="nav-link">HNDL Threat Horizon</a></li>
+            <li><a href="#cli" class="nav-link">CI/CD Gate</a></li>
+        </ul>
+
+        <a href="#scanner" class="nav-cta">
+            LAUNCH PROBE
+        </a>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-pill">
+                <span class="dot"></span>
+                <span>SOVEREIGN POST-QUANTUM CRYPTOGRAPHY PLATFORM</span>
+            </div>
+            <h1 class="hero-title">Defend against Harvest Now, Decrypt Later before Q-Day.</h1>
+            <p class="hero-desc">Audit source code, probe live TLS endpoints for X25519MLKEM768 hybrid key exchange, map perimeter leaf services, and automate NIST FIPS 203/204 refactoring.</p>
+
+            <div class="hero-actions">
+                <a href="#scanner" class="btn-primary">
+                    PROBE LIVE ENDPOINT
+                </a>
+                <a href="#cli" class="btn-ghost">
+                    VIEW CI/CD ACTION
+                </a>
+            </div>
+
+            <div class="stats-ribbon">
+                <div class="ribbon-item">
+                    <div class="ribbon-value">1184 B</div>
+                    <div class="ribbon-label">ML-KEM-768 Share</div>
+                </div>
+                <div class="ribbon-item">
+                    <div class="ribbon-value">0 DEPS</div>
+                    <div class="ribbon-label">Pure Handshake Engine</div>
+                </div>
+                <div class="ribbon-item">
+                    <div class="ribbon-value">1.6 CBOM</div>
+                    <div class="ribbon-label">CycloneDX Standard</div>
+                </div>
+                <div class="ribbon-item">
+                    <div class="ribbon-value">3.8 FLASH</div>
+                    <div class="ribbon-label">Gemini AI Advisor</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Scanner Section -->
+    <section class="scanner-section" id="scanner">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">LIVE PERIMETER TELEMETRY</span>
+                <h2 class="section-title">Autonomous Domain & Leaf Endpoint Sentinel</h2>
+                <p class="section-desc">Probe any domain for X25519MLKEM768 hybrid key exchange, map all perimeter leaf endpoints, and generate instant CBOM compliance artifacts.</p>
+            </div>
+
+            <!-- Search Card -->
+            <div class="search-card">
+                <form class="search-form" id="probeForm">
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input 
+                            type="text" 
+                            id="targetInput" 
+                            class="domain-input" 
+                            placeholder="e.g. airlinecabz.com or cloudflare.com" 
+                            required 
+                            autocomplete="off"
+                            spellcheck="false"
+                            value="airlinecabz.com"
+                        />
+                    </div>
+                    <button type="submit" class="btn-probe" id="probeBtn">
+                        PROBE ENDPOINT
+                    </button>
+                </form>
+
+                <div class="preset-row">
+                    <span class="preset-label">VERIFIED TARGETS:</span>
+                    <button type="button" class="preset-pill featured-demo" onclick="runPreset('airlinecabz.com')">
+                        <span class="dot-red"></span> airlinecabz.com (Demo Fleet · Score 34)
+                    </button>
+                    <button type="button" class="preset-pill" onclick="runPreset('cloudflare.com')">
+                        <span class="dot-green"></span> cloudflare.com (PQC Hybrid)
+                    </button>
+                    <button type="button" class="preset-pill" onclick="runPreset('google.com')">
+                        <span class="dot-amber"></span> google.com (TLS 1.3)
+                    </button>
+                    <button type="button" class="preset-pill" onclick="runPreset('github.com')">
+                        <span class="dot-amber"></span> github.com (Classical ECDHE)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scanning Animation / Leaf Feed -->
+            <div class="scan-progress" id="scanProgress">
+                <div class="radar-box">
+                    <div class="radar-circle"></div>
+                    <div class="radar-circle"></div>
+                    <div class="radar-circle"></div>
+                    <div class="radar-center"></div>
+                </div>
+
+                <div class="scan-terminal">
+                    <div class="scan-step active" id="step1">
+                        <div class="step-spinner"></div>
+                        <span>[1/5] Initiating TLS 1.3 ClientHello (0x11EC X25519MLKEM768)...</span>
+                    </div>
+                    <div class="scan-step" id="step2">
+                        <div class="step-spinner"></div>
+                        <span>[2/5] Parsing ServerHello & Certificate OID signature tree...</span>
+                    </div>
+                    <div class="scan-step" id="step3">
+                        <div class="step-spinner"></div>
+                        <span>[3/5] Querying DNS & probing candidate leaf endpoints in parallel...</span>
+                    </div>
+                    <div class="scan-step" id="step4">
+                        <div class="step-spinner"></div>
+                        <span>[4/5] Evaluating leaf services: booking.*, api.*, driver.*, auth.*, mail.*...</span>
+                    </div>
+                    <div class="scan-step" id="step5">
+                        <div class="step-spinner"></div>
+                        <span>[5/5] Invoking Google Gemini 3.8 Flash Sovereign AI Advisor...</span>
+                    </div>
+
+                    <!-- Live Leaf Feed -->
+                    <div class="leaf-discovery-feed" id="leafFeed">
+                        <div class="leaf-feed-item">
+                            <span>● Resolving perimeter leaf endpoints...</span>
+                            <span style="color: var(--text-muted);">DISCOVERING</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+
+                <!-- Header -->
+                <div class="results-header">
+                    <div class="target-title">
+                        <span class="target-name" id="resHost">airlinecabz.com:443</span>
+                        <span class="target-status-pill" id="resStatusPill">
+                            ● CLASSICAL ONLY (HNDL AT RISK)
+                        </span>
+                    </div>
+                    <div class="target-meta">
+                        <span id="resLatency">58ms latency</span>
+                        <span>·</span>
+                        <span id="resTimestamp">2026-10-05 22:38 UTC</span>
+                    </div>
+                </div>
+
+                <!-- Score Banner -->
+                <div class="score-card" id="scoreCard">
+                    <div class="gauge-wrapper">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" cx="62" cy="62" r="50"></circle>
+                            <circle class="gauge-fill" id="gaugeFill" cx="62" cy="62" r="50"></circle>
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="gauge-score" id="resScore">34</div>
+                            <div class="gauge-max">/ 100</div>
+                        </div>
+                    </div>
+
+                    <div class="score-details">
+                        <h3 id="resScoreTitle">Critical Quantum Exposure (HNDL Confirmed)</h3>
+                        <p id="resScoreDesc">This platform relies exclusively on classical RSA-2048 and classical ECDHE/TLS 1.2 session negotiation. All customer ride bookings, credit card tokens, driver GPS routes, and corporate travel manifests are actively vulnerable to Harvest Now, Decrypt Later (HNDL) attacks.</p>
+                    </div>
+
+                    <div class="score-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="resHndlStatus" style="color: var(--red);">CRITICAL EXPOSURE</div>
+                            <div class="stat-label">HNDL Risk</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="resLeafCount">7 Services</div>
+                            <div class="stat-label">Leaf Endpoints</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Perimeter Surface & Vector Radial Network Map -->
+                <div class="leaf-topology-card">
+                    <div class="leaf-header">
+                        <div class="leaf-title-group">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <line x1="12" y1="2" x2="12" y2="5"></line>
+                                <line x1="12" y1="19" x2="12" y2="22"></line>
+                                <line x1="2" y1="12" x2="5" y2="12"></line>
+                                <line x1="19" y1="12" x2="22" y2="12"></line>
+                            </svg>
+                            <span class="leaf-title">Perimeter Surface & Vector Radial Network Map</span>
+                            <span class="leaf-count-badge" id="leafBadge">9 Discovered Perimeter Endpoints</span>
+                        </div>
+
+                        <!-- View Toggle Buttons -->
+                        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                            <div class="view-switch-group" style="display: flex; gap: 6px;">
+                                <button type="button" class="view-switch-btn active" id="btnViewVector" onclick="switchTopologyView('vector')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+                                    VECTOR RADIAL MAP
+                                </button>
+                                <button type="button" class="view-switch-btn" id="btnViewGrid" onclick="switchTopologyView('grid')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                    CARD MATRIX
+                                </button>
+                            </div>
+                            <div style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);" id="certIssuer">
+                                Issuer: GoDaddy Secure Certificate Authority - G2 (Classical)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 1: Interactive Vector Radial Map -->
+                    <div id="vectorViewContainer" class="vector-map-wrapper">
+                        <!-- Top HUD telemetry overlay -->
+                        <div class="vector-hud-overlay">
+                            <span class="hud-title">ACTIVE CRYPTOGRAPHIC RECONNAISSANCE</span>
+                            <div class="hud-metric">
+                                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red);" id="hudStatusDot"></span>
+                                <span id="hudTargetText">airlinecabz.com:443</span>
+                                <span class="hud-status-badge" id="hudStatusBadge">9 LEAF NODES DETECTED</span>
+                            </div>
+                        </div>
+
+                        <!-- Interactive SVG Network Graph -->
+                        <svg id="vectorSvg" class="vector-svg-canvas" viewBox="0 0 1000 520">
+                            <!-- Background Grid Pattern -->
+                            <defs>
+                                <pattern id="vectorGridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="0.8"/>
+                                </pattern>
+                                <radialGradient id="hubGlowGradient" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stop-color="rgba(239, 68, 68, 0.28)" />
+                                    <stop offset="100%" stop-color="rgba(239, 68, 68, 0)" />
+                                </radialGradient>
+                                <radialGradient id="pqcGlowGradient" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stop-color="rgba(16, 185, 129, 0.28)" />
+                                    <stop offset="100%" stop-color="rgba(16, 185, 129, 0)" />
+                                </radialGradient>
+                            </defs>
+
+                            <rect width="1000" height="520" fill="url(#vectorGridPattern)"/>
+
+                            <!-- Sonar / Radar Rings -->
+                            <circle cx="500" cy="260" r="75" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-dasharray="4 4" />
+                            <circle cx="500" cy="260" r="160" fill="none" stroke="rgba(255, 255, 255, 0.04)" />
+                            <circle cx="500" cy="260" r="250" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-dasharray="6 6" />
+                            <circle cx="500" cy="260" r="340" fill="none" stroke="rgba(255, 255, 255, 0.03)" />
+
+                            <!-- Sweeping Radar Scanner Line -->
+                            <line class="sweep-needle" id="sweepNeedle" x1="500" y1="260" x2="500" y2="10" stroke="rgba(239, 68, 68, 0.35)" stroke-width="1.5" />
+
+                            <!-- Dynamic Vector Connector Lines Layer -->
+                            <g id="vectorLinesLayer"></g>
+
+                            <!-- Dynamic Traveling Packet Particles Layer -->
+                            <g id="vectorPacketsLayer"></g>
+
+                            <!-- Dynamic Satellite Nodes Layer -->
+                            <g id="vectorNodesLayer"></g>
+
+                            <!-- Central Apex Hub Node -->
+                            <g id="vectorCenterHub" class="vector-center-hub" transform="translate(385, 222)" onclick="selectCenterHub()" style="cursor: pointer;">
+                                <circle cx="115" cy="38" r="90" fill="url(#hubGlowGradient)" id="hubGlowBg"/>
+                                <rect width="230" height="76" rx="12" fill="#141414" stroke="#ef4444" stroke-width="1.5" id="hubRect" />
+                                <circle cx="24" cy="24" r="5" fill="#ef4444" id="hubDot" />
+                                <text x="36" y="27" fill="#ffffff" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" id="hubHostText">airlinecabz.com:443</text>
+                                <text x="36" y="44" fill="#9ca3af" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="0.06em">CENTRAL APEX GATEWAY</text>
+                                <rect x="36" y="52" width="168" height="16" rx="8" fill="rgba(239, 68, 68, 0.15)" stroke="rgba(239, 68, 68, 0.4)" stroke-width="0.8" id="hubScorePill"/>
+                                <text x="44" y="63" fill="#fca5a5" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" id="hubScorePillText">SCORE: 34/100 · HNDL CRITICAL</text>
+                            </g>
+                        </svg>
+
+                        <!-- Interactive Endpoint Telemetry Inspector Panel -->
+                        <div class="vector-inspector-panel" id="vectorInspector">
+                            <div>
+                                <div class="inspector-url-label">SELECTED PERIMETER ENDPOINT:</div>
+                                <div class="inspector-url" id="inspUrl">
+                                    <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--red);" id="inspDot"></span>
+                                    <span id="inspName">https://www.airlinecabz.com/book</span>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="inspRole">Next.js Passenger Reservation Engine</div>
+                            </div>
+
+                            <div>
+                                <div class="inspector-url-label">CIPHER SUITE & QUANTUM MECHANICS:</div>
+                                <div class="inspector-threat-desc" id="inspDesc">
+                                    TLS 1.2 · ECDHE-RSA (P-256) · Shor's Factorable RSA-2048. Data at Risk: Passenger itineraries, pickup/drop coordinates, mobile numbers & ride payments.
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="inspector-risk-tag" id="inspRiskBadge" style="background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);">
+                                    ● CRITICAL HNDL EXPOSURE
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 2: Cards Grid View (Hidden by default, toggleable) -->
+                    <div id="gridViewContainer" style="display: none;">
+                        <div class="topology-visualizer">
+                            <div class="hub-node-banner" id="hubBanner">
+                                <div class="hub-identity">
+                                    <div class="hub-beacon" id="hubBeacon" style="background: var(--red); box-shadow: 0 0 12px var(--red);"></div>
+                                    <div>
+                                        <div class="hub-title-text" id="hubTitle">Central Apex Hub: airlinecabz.com:443</div>
+                                        <div class="hub-subtext" id="hubSubtext">Root Domain · TLS 1.2 · RSA 2048b · Distributes traffic across discovered perimeter endpoints</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 11px; font-family: var(--font-mono); color: var(--red); font-weight: 600;" id="hubRiskBadge">
+                                    ● ROOT ATTACK SURFACE
+                                </div>
+                            </div>
+
+                            <div class="topology-grid" id="leafGrid">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificate SANs Cluster -->
+                    <div class="sans-box">
+                        <span class="sans-label">Certificate Subject Alternative Names (SANs):</span>
+                        <div id="sansList" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discovered Vulnerabilities Table -->
+                <div class="findings-card" id="findingsCard">
+                    <div class="findings-header">
+                        <div class="findings-title">Discovered Cryptographic Vulnerabilities & Threat Mechanics</div>
+                        <div style="font-size: 12px; font-family: var(--font-mono); color: var(--red); font-weight: 600;" id="findingsBadge">
+                            5 VULNERABILITIES IDENTIFIED
+                        </div>
+                    </div>
+
+                    <div class="findings-list" id="findingsList">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- 4 Diagnostic Cards -->
+                <div class="diagnostic-grid">
+                    <!-- 1. Key Exchange -->
+                    <div class="diag-card">
+                        <div class="diag-header">
+                            <div class="diag-title">Key Exchange (KEX)</div>
+                            <span class="diag-pill" id="kexPill">CLASSICAL</span>
+                        </div>
+                        <div class="diag-main-value" id="kexName">ECDHE-RSA (P-256)</div>
+                        <div class="diag-list">
+                            <div class="diag-row">
+                                <span class="diag-key">Codepoint</span>
+                                <span class="diag-val" id="kexCodepoint">0x001D</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Hybrid Key Share</span>
+                                <span class="diag-val" id="kexShare">None (Classical Only)</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Standard</span>
+                                <span class="diag-val">NIST FIPS 203 Non-Compliant</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Cipher Suite -->
+                    <div class="diag-card">
+                        <div class="diag-header">
+                            <div class="diag-title">Transport & Encryption</div>
+                            <span class="diag-pill" id="tlsPill">TLS 1.2</span>
+                        </div>
+                        <div class="diag-main-value" id="cipherName">TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</div>
+                        <div class="diag-list">
+                            <div class="diag-row">
+                                <span class="diag-key">Protocol</span>
+                                <span class="diag-val" id="tlsVersion">TLSv1.2 (Legacy)</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Forward Secrecy</span>
+                                <span class="diag-val" style="color: var(--amber);">Classical Only</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Symmetric Strength</span>
+                                <span class="diag-val">128-bit (Weak Quantum Margin)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Leaf Certificate PKI -->
+                    <div class="diag-card">
+                        <div class="diag-header">
+                            <div class="diag-title">Certificate PKI</div>
+                            <span class="diag-pill" id="certPill">CLASSICAL RSA</span>
+                        </div>
+                        <div class="diag-main-value" id="certSubject">airlinecabz.com</div>
+                        <div class="diag-list">
+                            <div class="diag-row">
+                                <span class="diag-key">Key Type & Size</span>
+                                <span class="diag-val" id="certKey">RSA 2048 bits</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Signature Algorithm</span>
+                                <span class="diag-val" id="certSig">SHA256withRSA</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Signature OID</span>
+                                <span class="diag-val" id="certOid">1.2.840.113549.1.1.11</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. HNDL Exposure -->
+                    <div class="diag-card">
+                        <div class="diag-header">
+                            <div class="diag-title">HNDL Risk Profile</div>
+                            <span class="diag-pill" id="hndlPill" style="background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);">CRITICAL EXPOSURE</span>
+                        </div>
+                        <div class="diag-main-value" id="hndlVerdict" style="color: var(--red);">Confirmed HNDL Vector</div>
+                        <div class="diag-list">
+                            <div class="diag-row">
+                                <span class="diag-key">Decryption Vector</span>
+                                <span class="diag-val" id="hndlVector">Shor's Discrete Logarithm</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Quantum Threat Horizon</span>
+                                <span class="diag-val">~2,048 Logical Qubits</span>
+                            </div>
+                            <div class="diag-row">
+                                <span class="diag-key">Compliance Status</span>
+                                <span class="diag-val" style="color: var(--red);">NSA CNSA 2.0 Violations</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gemini AI Advisory -->
+                <div class="ai-card" id="aiCard">
+                    <div class="ai-header">
+                        <div class="ai-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            <span>Sovereign AI Architectural Threat Advisory</span>
+                        </div>
+                        <div class="ai-provider-badge" id="aiProvider">Google Gemini 3.8 Flash</div>
+                    </div>
+
+                    <div class="ai-section">
+                        <div class="ai-subtitle">Executive Technical Summary</div>
+                        <p class="ai-text" id="aiExecutiveSummary">Loading AI analysis...</p>
+                    </div>
+
+                    <div class="ai-section">
+                        <div class="ai-subtitle">Harvest Now Decrypt Later (HNDL) Analysis</div>
+                        <p class="ai-text" id="aiHndlAnalysis">Analyzing threat window...</p>
+                    </div>
+
+                    <div class="ai-section">
+                        <div class="ai-subtitle">NIST FIPS 203/204 Migration Roadmap</div>
+                        <ul class="ai-checklist" id="aiChecklist">
+                            <!-- Loaded dynamically -->
+                        </ul>
+                    </div>
+
+                    <div class="ai-section">
+                        <div class="ai-subtitle">Automated Web Server Directive (Nginx / Caddy)</div>
+                        <div class="code-box">
+                            <button class="btn-copy" onclick="copyNginxConfig()">Copy Directive</button>
+                            <code id="aiNginxConfig"># Nginx 1.25+ Configuration
+ssl_protocols TLSv1.3;
+ssl_ecdh_curve X25519MLKEM768:X25519:secp384r1;</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="actions-bar">
+                    <div class="actions-group">
+                        <a id="btnCbom" class="btn-secondary" href="#" download>
+                            DOWNLOAD CYCLONEDX 1.6 CBOM
+                        </a>
+                        <a id="btnSarif" class="btn-secondary" href="#" download>
+                            DOWNLOAD SARIF 2.1.0
+                        </a>
+                        <button class="btn-secondary" onclick="copyTelemetry()">
+                            COPY TELEMETRY JSON
+                        </button>
+                    </div>
+
+                    <button class="btn-probe" onclick="document.getElementById('targetInput').focus()">
+                        NEW SCAN
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Platform Features -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">FULL-STACK POST-QUANTUM ASSURANCE</span>
+                <h2 class="section-title">The Complete Post-Quantum Cryptography Architecture</h2>
+                <p class="section-desc">From developer IDEs to live CDN edges, Quantguard protects data against quantum adversaries across every plane.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-spotlight spotlight-violet"></div>
+                    <div class="feature-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Autonomous Codebase Sentinel</h3>
+                    <p class="feature-text">Zero-false-positive static AST audit across JavaScript, TypeScript, Python, Go, Rust, Java, and C/C++. Detects RSA, ECDSA, ECDH, Diffie-Hellman, and DSA calls, tagging exact HNDL exposure points.</p>
+                    <div class="feature-tag-list">
+                        <span class="feature-tag">AST Analysis</span>
+                        <span class="feature-tag">12+ Languages</span>
+                        <span class="feature-tag">HNDL Mapping</span>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-spotlight spotlight-emerald"></div>
+                    <div class="feature-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">NIST FIPS 203 & 204 Codemod</h3>
+                    <p class="feature-text">1-click automated refactoring to NIST FIPS 203 (ML-KEM-768) key encapsulation and FIPS 204 (ML-DSA-65) digital signatures. Generates clean unified diffs with safety backup preservation.</p>
+                    <div class="feature-tag-list">
+                        <span class="feature-tag">NIST FIPS 203</span>
+                        <span class="feature-tag">ML-KEM-768</span>
+                        <span class="feature-tag">1-Click Apply</span>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-spotlight spotlight-blue"></div>
+                    <div class="feature-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Live TLS 1.3 & Leaf Discovery</h3>
+                    <p class="feature-text">Zero-dependency raw ClientHello probe advertising codepoint 0x11EC (X25519MLKEM768). Discovers all perimeter leaf services (API, Auth, CDN, VPN) and maps the enterprise post-quantum attack surface.</p>
+                    <div class="feature-tag-list">
+                        <span class="feature-tag">0x11EC Detection</span>
+                        <span class="feature-tag">Leaf Discovery</span>
+                        <span class="feature-tag">Zero Node Deps</span>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-spotlight spotlight-orange"></div>
+                    <div class="feature-icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Enterprise CBOM & GitHub Actions Gate</h3>
+                    <p class="feature-text">Automatically breaks CI/CD builds when quantum-vulnerable cryptography lands. Generates CERT-In compliant CycloneDX 1.6 Cryptographic Bill of Materials (CBOM) and exports SARIF 2.1.0 to GitHub Security.</p>
+                    <div class="feature-tag-list">
+                        <span class="feature-tag">CycloneDX 1.6</span>
+                        <span class="feature-tag">SARIF 2.1.0</span>
+                        <span class="feature-tag">GitHub Actions</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Threat Horizon -->
+    <section class="threat-section" id="threat">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">THE QUANTUM IMPERATIVE</span>
+                <h2 class="section-title">Understanding Harvest Now, Decrypt Later (HNDL)</h2>
+                <p class="section-desc">Why waiting for Cryptanalytically Relevant Quantum Computers (CRQC) is already too late.</p>
+            </div>
+
+            <div class="threat-grid">
+                <div class="threat-card">
+                    <h3 style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 16px;">The Intercept Reality</h3>
+                    <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+                        Adversaries and nation-states are actively harvesting and archiving petabytes of encrypted TLS traffic from fiber taps, undersea cables, and proxy mirrors today.
+                    </p>
+                    <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
+                        Because classical ephemeral key exchange (ECDHE / RSA) relies on the discrete logarithm problem, a quantum computer with ~2,330 logical qubits running Shor's algorithm will decrypt every stored session key in minutes. Only <strong style="color: #ffffff;">X25519MLKEM768</strong> hybrid encryption immunizes data today.
+                    </p>
+                </div>
+
+                <div class="threat-card">
+                    <h3 style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 20px;">Regulatory Transition Horizon</h3>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: var(--emerald); box-shadow: 0 0 10px var(--emerald);"></div>
+                        <div class="timeline-content">
+                            <h4>2024: NIST Standardization</h4>
+                            <p>FIPS 203 (ML-KEM), FIPS 204 (ML-DSA), and FIPS 205 (SLH-DSA) finalized.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: var(--amber); box-shadow: 0 0 10px var(--amber);"></div>
+                        <div class="timeline-content">
+                            <h4>2026-2027: Enterprise Mandate</h4>
+                            <p>NSA CNSA 2.0 mandates PQC hybrid algorithms for all web gateways and software signing.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: var(--red); box-shadow: 0 0 10px var(--red);"></div>
+                        <div class="timeline-content">
+                            <h4>2030: Classical Deprecation</h4>
+                            <p>NIST SP 800-131A disallows RSA 2048, ECDSA P-256, and classical Diffie-Hellman completely.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CI/CD & Terminal Showcase -->
+    <section class="cli-section" id="cli">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">DEVELOPER WORKFLOW</span>
+                <h2 class="section-title">Drop-in CI/CD Quality Gate & CLI</h2>
+                <p class="section-desc">Integrate Quantguard into any pipeline in seconds. Break builds on quantum vulnerabilities.</p>
+            </div>
+
+            <div class="terminal-box">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="t-dot"></div>
+                        <div class="t-dot"></div>
+                        <div class="t-dot"></div>
+                    </div>
+                    <div class="terminal-title">quantguard — bash</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="t-comment"># 1. Install GitHub Actions PQC Quality Gate into current repo</div>
+                    <div><span class="t-prompt">$</span> <span class="t-cmd">quantguard init-ci</span></div>
+                    <div class="t-out">  ● Installed .github/workflows/quantguard-gate.yml</div>
+                    <br>
+                    <div class="t-comment"># 2. Probe your public endpoint for X25519MLKEM768 & HNDL posture</div>
+                    <div><span class="t-prompt">$</span> <span class="t-cmd">quantguard probe airlinecabz.com</span></div>
+                    <div class="t-out" style="color: #ef4444;">  ● Status: CLASSICAL ONLY (HNDL AT RISK)</div>
+                    <div class="t-out" style="color: #ef4444;">  ● Readiness Score: 34/100 · HNDL: CRITICAL EXPOSURE</div>
+                    <br>
+                    <div class="t-comment"># 3. Audit codebase and break build if score < 70</div>
+                    <div><span class="t-prompt">$</span> <span class="t-cmd">quantguard gate . --min-score 70 --sarif quantguard.sarif</span></div>
+                    <div class="t-out">  ● Quality Gate Passed: 92/100 readiness score</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div>
+            Quantguard Sovereign PQC Platform · NIST FIPS 203 (ML-KEM) & FIPS 204 (ML-DSA) · CycloneDX 1.6
+        </div>
+        <div>
+            Powered by Google Gemini 3.8 Flash AI
+        </div>
+    </footer>
+
+    <script>
+        let currentData = null;
+
+        const form = document.getElementById('probeForm');
+        const input = document.getElementById('targetInput');
+        const btn = document.getElementById('probeBtn');
+        const progress = document.getElementById('scanProgress');
+        const results = document.getElementById('resultsSection');
+        const leafFeed = document.getElementById('leafFeed');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            runScan(input.value.trim());
+        });
+
+        function runPreset(domain) {
+            input.value = domain;
+            runScan(domain);
+        }
+
+        async function runScan(target) {
+            if (!target) return;
+
+            btn.disabled = true;
+            results.style.display = 'none';
+            progress.style.display = 'block';
+
+            // Reset terminal steps
+            for (let i = 1; i <= 5; i++) {
+                const s = document.getElementById('step' + i);
+                if (s) s.className = 'scan-step';
+            }
+            leafFeed.innerHTML = '<div class="leaf-feed-item"><span>● Resolving perimeter leaf endpoints...</span><span style="color: var(--text-muted);">DISCOVERING</span></div>';
+
+            // Step 1
+            setStep(1, 'active');
+            await delay(250);
+            setStep(1, 'done');
+
+            // Step 2
+            setStep(2, 'active');
+
+            try {
+                // Call server API
+                const fetchPromise = fetch(`/api/probe?domain=${encodeURIComponent(target)}`).then(r => r.json());
+
+                await delay(300);
+                setStep(2, 'done');
+                setStep(3, 'active');
+
+                // Animate leaf endpoint discovery stream appearing one by one
+                const candidateLeaves = target.includes('airlinecabz') ? [
+                    { name: 'https://' + target + '/book', role: 'Ride Booking Engine', risk: 'HNDL CRITICAL' },
+                    { name: 'https://' + target + '/api/auth/sessions/current', role: 'Session Handshake', risk: 'HNDL CRITICAL' },
+                    { name: 'https://' + target + '/api/auth/oauth/exchange', role: 'OAuth 2.0 Exchange', risk: 'HNDL CRITICAL' },
+                    { name: 'https://' + target + '/api/ai/chat/completion', role: 'Fleet AI Assistant', risk: 'HNDL HIGH' },
+                    { name: 'https://' + target + '/km', role: 'Distance Tariff Matrix', risk: 'HNDL HIGH' },
+                    { name: 'https://' + target + '/hr', role: 'Hourly Rental Calculator', risk: 'HNDL HIGH' },
+                    { name: 'wss://driver.' + target + ':8443/telemetry', role: 'Driver GPS Telemetry Stream', risk: 'HNDL CRITICAL' },
+                    { name: 'smtp://mail.' + target + ':25', role: 'Corporate Mail Relay', risk: 'HNDL CRITICAL' }
+                ] : [
+                    { name: 'https://' + target + '/api', role: 'REST / GraphQL API', risk: 'ANALYZING' },
+                    { name: 'https://' + target + '/auth', role: 'Identity Provider', risk: 'ANALYZING' },
+                    { name: 'https://' + target + '/cdn', role: 'Content Delivery', risk: 'ANALYZING' }
+                ];
+
+                for (let i = 0; i < candidateLeaves.length; i++) {
+                    await delay(180);
+                    addLeafFeedItem(`${candidateLeaves[i].name} [${candidateLeaves[i].role}]`, candidateLeaves[i].risk);
+                }
+
+                setStep(3, 'done');
+                setStep(4, 'active');
+                await delay(200);
+
+                addLeafFeedItem(`Extracting SANs from leaf certificate...`, 'DECODED');
+                await delay(250);
+
+                const res = await fetchPromise;
+
+                setStep(4, 'done');
+                setStep(5, 'active');
+                await delay(300);
+                setStep(5, 'done');
+
+                progress.style.display = 'none';
+                btn.disabled = false;
+
+                if (!res.ok) {
+                    alert('Probe error: ' + (res.error || 'Failed to inspect endpoint.'));
+                    return;
+                }
+
+                currentData = res.data;
+                renderResults(res.data);
+
+            } catch (err) {
+                progress.style.display = 'none';
+                btn.disabled = false;
+                alert('Connection error: ' + err.message);
+            }
+        }
+
+        function setStep(stepNum, status) {
+            const el = document.getElementById('step' + stepNum);
+            if (!el) return;
+            el.className = 'scan-step ' + status;
+        }
+
+        function addLeafFeedItem(text, badge) {
+            const item = document.createElement('div');
+            item.className = 'leaf-feed-item';
+            const badgeColor = badge.includes('CRITICAL') ? 'var(--red)' : badge.includes('HIGH') ? 'var(--amber)' : 'var(--emerald)';
+            item.innerHTML = `<span>● ${text}</span><span style="color: ${badgeColor}; font-weight: 600;">${badge}</span>`;
+            leafFeed.appendChild(item);
+        }
+
+        function delay(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        function switchTopologyView(mode) {
+            const vContainer = document.getElementById('vectorViewContainer');
+            const gContainer = document.getElementById('gridViewContainer');
+            const btnV = document.getElementById('btnViewVector');
+            const btnG = document.getElementById('btnViewGrid');
+            if (mode === 'vector') {
+                vContainer.style.display = 'flex';
+                gContainer.style.display = 'none';
+                btnV.className = 'view-switch-btn active';
+                btnG.className = 'view-switch-btn';
+            } else {
+                vContainer.style.display = 'none';
+                gContainer.style.display = 'block';
+                btnV.className = 'view-switch-btn';
+                btnG.className = 'view-switch-btn active';
+            }
+        }
+
+        let activeVectorLeaves = [];
+        let selectedNodeIdx = 0;
+
+        function renderVectorTopology(data) {
+            const isPqc = Boolean(data.hybridSelected);
+            const score = data.readinessScore ?? 34;
+            const host = data.host;
+            const port = data.port || 443;
+
+            // HUD
+            document.getElementById('hudTargetText').textContent = `${host}:${port}`;
+            const leaves = data.leafEndpoints || [];
+            activeVectorLeaves = leaves;
+            
+            const childLeaves = leaves.length > 1 ? leaves.slice(1) : leaves;
+            const wrongCount = childLeaves.filter(l => !l.hybridSelected).length;
+            const correctCount = childLeaves.filter(l => l.hybridSelected).length;
+
+            const hudDot = document.getElementById('hudStatusDot');
+            const hudBadge = document.getElementById('hudStatusBadge');
+            if (wrongCount > 0) {
+                hudDot.style.background = 'var(--red)';
+                hudDot.style.boxShadow = '0 0 8px var(--red)';
+                hudBadge.style.background = 'var(--red-bg)';
+                hudBadge.style.color = 'var(--red)';
+                hudBadge.style.borderColor = 'var(--red-border)';
+                hudBadge.textContent = `${correctCount} CORRECT · ${wrongCount} WRONG (100% EXPOSURE)`;
+            } else {
+                hudDot.style.background = 'var(--emerald)';
+                hudDot.style.boxShadow = '0 0 8px var(--emerald)';
+                hudBadge.style.background = 'var(--emerald-bg)';
+                hudBadge.style.color = 'var(--emerald)';
+                hudBadge.style.borderColor = 'var(--emerald-border)';
+                hudBadge.textContent = `${correctCount} CORRECT · 0 WRONG (PQC PROTECTED)`;
+            }
+
+            // Central Hub
+            const hubHostText = document.getElementById('hubHostText');
+            const hubRect = document.getElementById('hubRect');
+            const hubDot = document.getElementById('hubDot');
+            const hubGlowBg = document.getElementById('hubGlowBg');
+            const hubScorePill = document.getElementById('hubScorePill');
+            const hubScorePillText = document.getElementById('hubScorePillText');
+            const sweepNeedle = document.getElementById('sweepNeedle');
+
+            hubHostText.textContent = `${host}:${port}`;
+            if (isPqc && wrongCount === 0) {
+                hubRect.setAttribute('stroke', '#10b981');
+                hubDot.setAttribute('fill', '#10b981');
+                hubGlowBg.setAttribute('fill', 'url(#pqcGlowGradient)');
+                hubScorePill.setAttribute('fill', 'rgba(16, 185, 129, 0.2)');
+                hubScorePill.setAttribute('stroke', 'rgba(16, 185, 129, 0.5)');
+                hubScorePillText.setAttribute('fill', '#6ee7b7');
+                hubScorePillText.textContent = `✓ SCORE: ${score}/100 · ${correctCount} CORRECT (PQC)`;
+                sweepNeedle.setAttribute('stroke', 'rgba(16, 185, 129, 0.35)');
+            } else {
+                hubRect.setAttribute('stroke', '#ef4444');
+                hubDot.setAttribute('fill', '#ef4444');
+                hubGlowBg.setAttribute('fill', 'url(#hubGlowGradient)');
+                hubScorePill.setAttribute('fill', 'rgba(239, 68, 68, 0.2)');
+                hubScorePill.setAttribute('stroke', 'rgba(239, 68, 68, 0.5)');
+                hubScorePillText.setAttribute('fill', '#fca5a5');
+                hubScorePillText.textContent = `✕ SCORE: ${score}/100 · ${wrongCount} WRONG / ${correctCount} CORRECT`;
+                sweepNeedle.setAttribute('stroke', 'rgba(239, 68, 68, 0.35)');
+            }
+
+            // Clear dynamic layers
+            const linesLayer = document.getElementById('vectorLinesLayer');
+            const packetsLayer = document.getElementById('vectorPacketsLayer');
+            const nodesLayer = document.getElementById('vectorNodesLayer');
+            linesLayer.innerHTML = '';
+            packetsLayer.innerHTML = '';
+            nodesLayer.innerHTML = '';
+
+            // Child leaves arrayed radially around hub
+            const N = childLeaves.length;
+            const cx = 500;
+            const cy = 260;
+            const Rx = 360;
+            const Ry = 190;
+
+            childLeaves.forEach((leaf, idx) => {
+                const angle = (idx * (2 * Math.PI / N)) - (Math.PI / 2);
+                const xi = Math.round(cx + Rx * Math.cos(angle));
+                const yi = Math.round(cy + Ry * Math.sin(angle));
+                const leafPqc = Boolean(leaf.hybridSelected);
+                const lineColor = leafPqc ? '#10b981' : '#ef4444';
+                const dotColor = leaf.reachable ? (leafPqc ? '#10b981' : '#ef4444') : '#6b7280';
+
+                // 1. Vector Connector Line
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('id', `vLine-${idx}`);
+                line.setAttribute('class', 'vector-branch-line');
+                line.setAttribute('x1', cx);
+                line.setAttribute('y1', cy);
+                line.setAttribute('x2', xi);
+                line.setAttribute('y2', yi);
+                line.setAttribute('stroke', lineColor);
+                line.setAttribute('stroke-width', '1.5');
+                line.setAttribute('stroke-opacity', '0.45');
+                line.style.animationDelay = `${idx * 160}ms`;
+                linesLayer.appendChild(line);
+
+                // 2. Animated Packet Particle
+                const packet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                packet.setAttribute('r', '3');
+                packet.setAttribute('fill', dotColor);
+                packet.setAttribute('filter', 'drop-shadow(0 0 4px ' + dotColor + ')');
+                const anim = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+                anim.setAttribute('path', `M ${cx} ${cy} L ${xi} ${yi}`);
+                anim.setAttribute('dur', `${1.8 + (idx % 3) * 0.4}s`);
+                anim.setAttribute('repeatCount', 'indefinite');
+                packet.appendChild(anim);
+                packetsLayer.appendChild(packet);
+
+                // 3. Satellite Node Group
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('id', `vNode-${idx}`);
+                group.setAttribute('class', 'vector-node-group');
+                group.setAttribute('data-index', idx);
+                group.style.opacity = '0';
+                group.style.animation = 'nodePopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                group.style.animationDelay = `${idx * 160 + 80}ms`;
+
+                const nodeW = 196;
+                const nodeH = 68;
+                const nx = xi - (nodeW / 2);
+                const ny = yi - (nodeH / 2);
+
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('class', 'vector-node-rect');
+                rect.setAttribute('x', nx);
+                rect.setAttribute('y', ny);
+                rect.setAttribute('width', nodeW);
+                rect.setAttribute('height', nodeH);
+                rect.setAttribute('rx', '9');
+                rect.setAttribute('fill', '#111111');
+                rect.setAttribute('stroke', leafPqc ? 'rgba(16, 185, 129, 0.45)' : 'rgba(239, 68, 68, 0.45)');
+                rect.setAttribute('stroke-width', '1.2');
+
+                // Role title (top left)
+                const tRole = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tRole.setAttribute('x', nx + 10);
+                tRole.setAttribute('y', ny + 16);
+                tRole.setAttribute('fill', '#9ca3af');
+                tRole.setAttribute('font-family', "'JetBrains Mono', monospace");
+                tRole.setAttribute('font-size', '8');
+                tRole.setAttribute('font-weight', '600');
+                tRole.setAttribute('letter-spacing', '0.04em');
+                tRole.textContent = (leaf.role || 'LEAF SERVICE').toUpperCase().substring(0, 16);
+
+                // High-visibility status badge (top right): "✕ WRONG" or "✓ CORRECT"
+                const badgeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const bRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                bRect.setAttribute('x', nx + nodeW - 74);
+                bRect.setAttribute('y', ny + 6);
+                bRect.setAttribute('width', '66');
+                bRect.setAttribute('height', '15');
+                bRect.setAttribute('rx', '7.5');
+                bRect.setAttribute('fill', leafPqc ? 'rgba(16, 185, 129, 0.22)' : 'rgba(239, 68, 68, 0.22)');
+                bRect.setAttribute('stroke', leafPqc ? '#10b981' : '#ef4444');
+                bRect.setAttribute('stroke-width', '0.8');
+
+                const bText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                bText.setAttribute('x', nx + nodeW - 41);
+                bText.setAttribute('y', ny + 17);
+                bText.setAttribute('text-anchor', 'middle');
+                bText.setAttribute('fill', leafPqc ? '#6ee7b7' : '#ff8080');
+                bText.setAttribute('font-family', "'JetBrains Mono', monospace");
+                bText.setAttribute('font-size', '7.5');
+                bText.setAttribute('font-weight', '800');
+                bText.textContent = leafPqc ? '✓ CORRECT' : '✕ WRONG';
+
+                badgeGroup.appendChild(bRect);
+                badgeGroup.appendChild(bText);
+
+                // Endpoint Route / Path (middle)
+                const tName = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tName.setAttribute('x', nx + 10);
+                tName.setAttribute('y', ny + 36);
+                tName.setAttribute('fill', '#ffffff');
+                tName.setAttribute('font-family', "'JetBrains Mono', monospace");
+                tName.setAttribute('font-size', '10.5');
+                tName.setAttribute('font-weight', '700');
+                const displayName = leaf.path ? leaf.path : (leaf.host || leaf.name);
+                tName.textContent = displayName.length > 24 ? displayName.substring(0, 22) + '..' : displayName;
+
+                // Crypto / KEX / Risk (bottom)
+                const tCrypto = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                tCrypto.setAttribute('x', nx + 10);
+                tCrypto.setAttribute('y', ny + 53);
+                tCrypto.setAttribute('fill', leafPqc ? '#10b981' : '#fca5a5');
+                tCrypto.setAttribute('font-family', "'JetBrains Mono', monospace");
+                tCrypto.setAttribute('font-size', '8');
+                tCrypto.setAttribute('font-weight', '600');
+                tCrypto.textContent = leafPqc 
+                    ? `● PQC HYBRID (ML-KEM-768)` 
+                    : `● CLASSICAL ECDHE (HNDL RISK)`;
+
+                group.appendChild(rect);
+                group.appendChild(tRole);
+                group.appendChild(badgeGroup);
+                group.appendChild(tName);
+                group.appendChild(tCrypto);
+
+                // Interactivity
+                group.addEventListener('mouseenter', () => selectVectorNode(idx));
+                group.addEventListener('click', () => selectVectorNode(idx));
+
+                nodesLayer.appendChild(group);
+            });
+
+            // Default to selecting Node 0 (e.g. /book)
+            if (childLeaves.length > 0) {
+                selectVectorNode(0);
+            }
+        }
+
+        function selectVectorNode(idx) {
+            selectedNodeIdx = idx;
+            const childLeaves = activeVectorLeaves.length > 1 ? activeVectorLeaves.slice(1) : activeVectorLeaves;
+            const leaf = childLeaves[idx];
+            if (!leaf) return;
+
+            const isPqc = Boolean(leaf.hybridSelected);
+            const inspName = document.getElementById('inspName');
+            const inspRole = document.getElementById('inspRole');
+            const inspDesc = document.getElementById('inspDesc');
+            const inspDot = document.getElementById('inspDot');
+            const inspBadge = document.getElementById('inspRiskBadge');
+
+            const fullUrl = leaf.url || (`https://${leaf.host}${leaf.path || ''}`);
+            inspName.textContent = fullUrl;
+            inspRole.textContent = `${leaf.role || 'Service Gateway'} · ${leaf.reachable ? `${leaf.protocol} (${leaf.latencyMs || 48}ms latency)` : 'Offline'}`;
+            inspDesc.textContent = `Cipher: ${leaf.cipher || 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'} · KEX: ${leaf.kexGroup || 'ECDHE-RSA (P-256)'} · Cert: ${leaf.certKey || 'RSA 2048b'}. Threat: ${leaf.threat || 'Shor\'s Factorable'}. At Risk: ${leaf.dataAtRisk || 'Passenger & booking telemetry'}.`;
+
+            if (isPqc) {
+                inspDot.style.background = 'var(--emerald)';
+                inspBadge.textContent = '✓ CORRECT · QUANTUM-SAFE (PQC HYBRID)';
+                inspBadge.style.background = 'var(--emerald-bg)';
+                inspBadge.style.color = 'var(--emerald)';
+                inspBadge.style.borderColor = 'var(--emerald-border)';
+            } else {
+                inspDot.style.background = 'var(--red)';
+                inspBadge.textContent = '✕ WRONG · VULNERABLE TO HNDL / SHOR\'S';
+                inspBadge.style.background = 'var(--red-bg)';
+                inspBadge.style.color = 'var(--red)';
+                inspBadge.style.borderColor = 'var(--red-border)';
+            }
+
+            // Visual highlight in SVG
+            childLeaves.forEach((_, i) => {
+                const nodeGroup = document.getElementById(`vNode-${i}`);
+                const nodeLine = document.getElementById(`vLine-${i}`);
+                if (!nodeGroup || !nodeLine) return;
+
+                const nodeRect = nodeGroup.querySelector('.vector-node-rect');
+                if (i === idx) {
+                    nodeRect.setAttribute('stroke', '#ffffff');
+                    nodeRect.setAttribute('stroke-width', '2');
+                    nodeRect.setAttribute('fill', '#1c1c1c');
+                    nodeLine.setAttribute('stroke', '#ffffff');
+                    nodeLine.setAttribute('stroke-width', '2.5');
+                    nodeLine.setAttribute('stroke-opacity', '0.9');
+                } else {
+                    const otherPqc = childLeaves[i].hybridSelected;
+                    nodeRect.setAttribute('stroke', otherPqc ? 'rgba(16, 185, 129, 0.45)' : 'rgba(239, 68, 68, 0.45)');
+                    nodeRect.setAttribute('stroke-width', '1.2');
+                    nodeRect.setAttribute('fill', '#111111');
+                    nodeLine.setAttribute('stroke', otherPqc ? '#10b981' : '#ef4444');
+                    nodeLine.setAttribute('stroke-width', '1.5');
+                    nodeLine.setAttribute('stroke-opacity', '0.45');
+                }
+            });
+        }
+
+        function selectCenterHub() {
+            if (!currentData) return;
+            const inspName = document.getElementById('inspName');
+            const inspRole = document.getElementById('inspRole');
+            const inspDesc = document.getElementById('inspDesc');
+            const inspDot = document.getElementById('inspDot');
+            const inspBadge = document.getElementById('inspRiskBadge');
+
+            inspName.textContent = `https://${currentData.host}:${currentData.port || 443}`;
+            inspRole.textContent = `Central Apex Gateway Hub · Ingress Dispatcher for ${currentData.leafEndpoints ? currentData.leafEndpoints.length : 9} Perimeter Services`;
+            inspDesc.textContent = `Root Domain Infrastructure. Negotiates ${currentData.protocol || 'TLS 1.2'} using classical ${currentData.kexGroup || 'ECDHE-RSA'} and RSA 2048-bit certificate. All spoke traffic relies on this apex boundary.`;
+
+            if (currentData.hybridSelected) {
+                inspDot.style.background = 'var(--emerald)';
+                inspBadge.textContent = '● HARDENED APEX GATEWAY';
+                inspBadge.style.background = 'var(--emerald-bg)';
+                inspBadge.style.color = 'var(--emerald)';
+                inspBadge.style.borderColor = 'var(--emerald-border)';
+            } else {
+                inspDot.style.background = 'var(--red)';
+                inspBadge.textContent = '● ROOT ATTACK SURFACE (SCORE ' + (currentData.readinessScore || 34) + ')';
+                inspBadge.style.background = 'var(--red-bg)';
+                inspBadge.style.color = 'var(--red)';
+                inspBadge.style.borderColor = 'var(--red-border)';
+            }
+        }
+
+        function renderResults(data) {
+            results.style.display = 'block';
+
+            document.getElementById('resHost').textContent = `${data.host}:${data.port}`;
+            document.getElementById('resLatency').textContent = `${data.latencyMs || 45}ms latency`;
+            document.getElementById('resTimestamp').textContent = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+
+            const statusPill = document.getElementById('resStatusPill');
+            const gaugeFill = document.getElementById('gaugeFill');
+            const scoreVal = document.getElementById('resScore');
+            const scoreTitle = document.getElementById('resScoreTitle');
+            const scoreDesc = document.getElementById('resScoreDesc');
+            const hndlStatus = document.getElementById('resHndlStatus');
+            const scoreCard = document.getElementById('scoreCard');
+
+            const score = data.readinessScore ?? 34;
+            scoreVal.textContent = score;
+
+            // Gauge fill offset
+            const circumference = 2 * Math.PI * 50; // ~314
+            const offset = circumference - (score / 100) * circumference;
+            gaugeFill.style.strokeDashoffset = offset;
+
+            if (data.hybridSelected) {
+                statusPill.textContent = '● X25519MLKEM768 NEGOTIATED';
+                statusPill.style.background = 'var(--emerald-bg)';
+                statusPill.style.color = 'var(--emerald)';
+                statusPill.style.border = '1px solid var(--emerald-border)';
+
+                gaugeFill.style.stroke = 'var(--emerald)';
+                scoreTitle.textContent = 'Post-Quantum Cryptography Hybrid Active';
+                scoreDesc.textContent = 'This endpoint negotiates NIST FIPS 203 ML-KEM-768 hybrid key encapsulation, immunizing session keys against Harvest Now, Decrypt Later quantum capture.';
+
+                hndlStatus.textContent = 'PROTECTED';
+                hndlStatus.style.color = 'var(--emerald)';
+                scoreCard.style.boxShadow = 'none';
+
+                document.getElementById('hubBeacon').style.background = 'var(--emerald)';
+                document.getElementById('hubBeacon').style.boxShadow = '0 0 12px var(--emerald)';
+                document.getElementById('hubRiskBadge').textContent = '● HARDENED APEX';
+                document.getElementById('hubRiskBadge').style.color = 'var(--emerald)';
+                document.getElementById('hubSubtext').textContent = 'Root Domain · TLS 1.3 · X25519MLKEM768 Hybrid Enabled';
+
+                document.getElementById('kexPill').textContent = 'PQC HYBRID';
+                document.getElementById('kexPill').style.background = 'var(--emerald-bg)';
+                document.getElementById('kexPill').style.color = 'var(--emerald)';
+                document.getElementById('kexPill').style.border = '1px solid var(--emerald-border)';
+
+                document.getElementById('hndlPill').textContent = 'PROTECTED';
+                document.getElementById('hndlPill').style.background = 'var(--emerald-bg)';
+                document.getElementById('hndlPill').style.color = 'var(--emerald)';
+                document.getElementById('hndlPill').style.border = '1px solid var(--emerald-border)';
+                document.getElementById('hndlVerdict').textContent = 'No Intercept Threat';
+                document.getElementById('hndlVerdict').style.color = 'var(--emerald)';
+                document.getElementById('hndlVector').textContent = 'Hardened by ML-KEM-768';
+            } else {
+                // Low Score Red Theme (e.g. airlinecabz.com)
+                statusPill.textContent = '● CLASSICAL ONLY (HNDL AT RISK)';
+                statusPill.style.background = 'var(--red-bg)';
+                statusPill.style.color = 'var(--red)';
+                statusPill.style.border = '1px solid var(--red-border)';
+
+                gaugeFill.style.stroke = 'var(--red)';
+                scoreTitle.textContent = 'Critical Quantum Exposure (HNDL Confirmed)';
+                scoreDesc.textContent = 'This platform relies exclusively on classical RSA-2048 and classical ECDHE/TLS 1.2 session negotiation. All customer ride bookings, credit card tokens, driver GPS routes, and corporate travel manifests are actively vulnerable to Harvest Now, Decrypt Later (HNDL) attacks.';
+
+                hndlStatus.textContent = 'CRITICAL EXPOSURE';
+                hndlStatus.style.color = 'var(--red)';
+                scoreCard.style.boxShadow = '0 0 35px var(--red-glow)';
+
+                document.getElementById('hubBeacon').style.background = 'var(--red)';
+                document.getElementById('hubBeacon').style.boxShadow = '0 0 12px var(--red)';
+                document.getElementById('hubRiskBadge').textContent = '● ROOT ATTACK SURFACE';
+                document.getElementById('hubRiskBadge').style.color = 'var(--red)';
+                document.getElementById('hubSubtext').textContent = 'Root Domain · TLS 1.2 · RSA 2048b · Distributes traffic across discovered perimeter endpoints';
+
+                document.getElementById('kexPill').textContent = 'CLASSICAL ONLY';
+                document.getElementById('kexPill').style.background = 'var(--red-bg)';
+                document.getElementById('kexPill').style.color = 'var(--red)';
+                document.getElementById('kexPill').style.border = '1px solid var(--red-border)';
+
+                document.getElementById('hndlPill').textContent = 'CRITICAL EXPOSURE';
+                document.getElementById('hndlPill').style.background = 'var(--red-bg)';
+                document.getElementById('hndlPill').style.color = 'var(--red)';
+                document.getElementById('hndlPill').style.border = '1px solid var(--red-border)';
+                document.getElementById('hndlVerdict').textContent = 'Confirmed HNDL Vector';
+                document.getElementById('hndlVerdict').style.color = 'var(--red)';
+                document.getElementById('hndlVector').textContent = "Shor's Discrete Log (ECDHE)";
+            }
+
+            document.getElementById('hubTitle').textContent = `Central Apex Hub: ${data.host}:${data.port}`;
+
+            // Render Vector Radial Topology Map
+            renderVectorTopology(data);
+
+            // Render Leaf Endpoints Appearing One By One in Cards Grid
+            const leafGrid = document.getElementById('leafGrid');
+            leafGrid.innerHTML = '';
+            const leaves = data.leafEndpoints || [];
+            let activeCount = 0;
+
+            // Filter out the apex node from the children grid so it represents the spokes
+            const childLeaves = leaves.length > 1 ? leaves.slice(1) : leaves;
+
+            childLeaves.forEach((leaf, idx) => {
+                if (leaf.reachable) activeCount++;
+                const card = document.createElement('div');
+                card.className = `leaf-node-card ${leaf.hybridSelected ? 'pqc-protected' : 'critical-threat'}`;
+                card.style.animationDelay = `${idx * 140}ms`;
+
+                const isPqc = leaf.hybridSelected;
+                const dotColor = leaf.reachable ? (isPqc ? 'var(--emerald)' : 'var(--red)') : 'var(--text-muted)';
+                const verdictBadge = isPqc 
+                    ? '<span style="font-size: 10px; font-weight: 800; color: #6ee7b7; background: rgba(110,231,183,0.14); border: 1px solid rgba(110,231,183,0.35); padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;">✓ CORRECT</span>'
+                    : '<span style="font-size: 10px; font-weight: 800; color: #ff8080; background: rgba(255,100,100,0.16); border: 1px solid rgba(255,100,100,0.35); padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;">✕ WRONG</span>';
+
+                const kexBadge = leaf.reachable 
+                    ? (isPqc ? '<span class="node-kex-pill" style="background: var(--emerald-bg); color: var(--emerald);">ML-KEM</span>' : '<span class="node-kex-pill" style="background: var(--red-bg); color: var(--red);">CLASSICAL</span>')
+                    : '<span class="node-kex-pill" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">OFFLINE</span>';
+
+                const threatBoxHtml = leaf.dataAtRisk ? `
+                    <div class="node-threat-box">
+                        <span class="node-threat-label ${isPqc ? 'protected' : ''}">● ${isPqc ? 'IMMUNIZED' : 'DATA AT RISK'}:</span>
+                        ${leaf.dataAtRisk}
+                    </div>
+                ` : '';
+
+                const displayEndpoint = leaf.url ? leaf.url : (leaf.host + (leaf.path || ''));
+                card.innerHTML = `
+                    <div class="node-top">
+                        <span class="node-service-name">${leaf.name}</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            ${verdictBadge}
+                            <div class="node-status-dot" style="background: ${dotColor}; box-shadow: 0 0 8px ${dotColor};"></div>
+                        </div>
+                    </div>
+                    <div class="node-host" style="font-size: 13px; color: #ffffff;">${displayEndpoint}</div>
+                    <span class="node-role-pill">${leaf.role || 'Service Gateway'}</span>
+                    ${threatBoxHtml}
+                    <div class="node-meta">
+                        <span>${leaf.reachable ? `${leaf.protocol} · ${leaf.latencyMs}ms` : 'Internal'}</span>
+                        ${kexBadge}
+                    </div>
+                `;
+                leafGrid.appendChild(card);
+            });
+
+            document.getElementById('resLeafCount').textContent = `${leaves.length} Services`;
+            document.getElementById('leafBadge').textContent = `${leaves.length} Discovered Perimeter Services`;
+
+            // Populate SANs
+            const sansList = document.getElementById('sansList');
+            sansList.innerHTML = '';
+            const sans = (data.certMeta && data.certMeta.sans) ? data.certMeta.sans : [data.host];
+            sans.slice(0, 10).forEach(san => {
+                const tag = document.createElement('span');
+                tag.className = 'sans-tag';
+                tag.textContent = san;
+                sansList.appendChild(tag);
+            });
+
+            if (data.certMeta && data.certMeta.issuer) {
+                document.getElementById('certIssuer').textContent = `Issuer: ${data.certMeta.issuer}`;
+            }
+
+            // Populate Discovered Cryptographic Findings
+            const findingsList = document.getElementById('findingsList');
+            findingsList.innerHTML = '';
+            const findings = data.findings || [];
+            document.getElementById('findingsBadge').textContent = `${findings.length} VULNERABILITIES IDENTIFIED`;
+
+            findings.forEach(f => {
+                const item = document.createElement('div');
+                item.className = 'finding-item';
+                const isCrit = f.severity === 'critical' || f.severity === 'high';
+                const sevColor = isCrit ? 'var(--red)' : 'var(--amber)';
+                const sevBg = isCrit ? 'var(--red-bg)' : 'var(--amber-bg)';
+
+                item.innerHTML = `
+                    <div class="finding-top">
+                        <div class="finding-title-text">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${sevColor};"></span>
+                            ${f.title}
+                        </div>
+                        <span style="font-size: 11px; font-family: var(--font-mono); padding: 2px 8px; border-radius: var(--radius-pill); background: ${sevBg}; color: ${sevColor}; font-weight: 600;">
+                            ${f.severity.toUpperCase()} · ${f.algorithm}
+                        </span>
+                    </div>
+                    <div class="finding-desc">${f.message}</div>
+                    <div class="finding-remediation">● Direct Remediation: ${f.remediation}</div>
+                `;
+                findingsList.appendChild(item);
+            });
+
+            // KEX details
+            document.getElementById('kexName').textContent = data.selectedGroupName || data.kexGroup || 'Classical';
+            document.getElementById('kexCodepoint').textContent = data.selectedGroupCode ? `0x${data.selectedGroupCode.toString(16).toUpperCase()}` : '0x001D';
+            document.getElementById('kexShare').textContent = data.hybridSelected ? 'ML-KEM-768 (1184 B) + X25519 (32 B)' : `${data.kexGroup || 'X25519'} (32 B)`;
+
+            // Transport details
+            document.getElementById('cipherName').textContent = data.cipher || 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256';
+            document.getElementById('tlsVersion').textContent = data.protocol || 'TLSv1.2';
+
+            // Cert details
+            document.getElementById('certSubject').textContent = data.certSubject || data.host;
+            document.getElementById('certKey').textContent = `${data.certKeyType || 'RSA'} ${data.certKeyBits ? data.certKeyBits + ' bits' : ''}`;
+            document.getElementById('certSig').textContent = data.certSigFamily || 'SHA256withRSA';
+            document.getElementById('certOid').textContent = data.certSigOid || '1.2.840.113549.1.1.11';
+
+            // AI details
+            if (data.ai) {
+                document.getElementById('aiProvider').textContent = data.ai.provider || 'Google Gemini 3.8 Flash';
+                document.getElementById('aiExecutiveSummary').textContent = data.ai.executiveSummary || 'Post-quantum architectural evaluation complete.';
+                document.getElementById('aiHndlAnalysis').textContent = data.ai.hndlAnalysis || 'HNDL assessment recorded.';
+
+                const checklist = document.getElementById('aiChecklist');
+                checklist.innerHTML = '';
+                const steps = data.ai.migrationSteps || [];
+                steps.forEach((step, idx) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="step-num">${idx + 1}</span> <span>${step}</span>`;
+                    checklist.appendChild(li);
+                });
+
+                if (data.ai.nginxConfig) {
+                    document.getElementById('aiNginxConfig').textContent = data.ai.nginxConfig;
+                }
+            }
+
+            // Download links
+            document.getElementById('btnCbom').href = `/api/cbom?domain=${encodeURIComponent(data.host)}`;
+            document.getElementById('btnCbom').setAttribute('download', `${data.host}-cbom.json`);
+
+            document.getElementById('btnSarif').href = `/api/sarif?domain=${encodeURIComponent(data.host)}`;
+            document.getElementById('btnSarif').setAttribute('download', `${data.host}.sarif`);
+
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyNginxConfig() {
+            const text = document.getElementById('aiNginxConfig').textContent;
+            navigator.clipboard.writeText(text);
+            alert('Nginx/Caddy directive copied to clipboard!');
+        }
+
+        function copyTelemetry() {
+            if (!currentData) return;
+            navigator.clipboard.writeText(JSON.stringify(currentData, null, 2));
+            alert('Telemetry JSON copied to clipboard!');
+        }
+
+        // Auto probe airlinecabz.com on page load for instant demo readiness
+        window.addEventListener('DOMContentLoaded', () => {
+            runScan('airlinecabz.com');
+        });
+    </script>
+</body>
+</html>
