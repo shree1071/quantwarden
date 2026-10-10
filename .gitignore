@@ -34,3 +34,5 @@ Desktop.ini
 *.sarif
 *.cbom.json
 gate_output.txt
+
+.vercel
