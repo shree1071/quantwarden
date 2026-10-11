@@ -2204,8 +2204,8 @@ const htmlContent = `<!DOCTYPE html>
                         </div>
 
                         <div class="score-text-block">
-                            <h3 id="resScoreTitle">Critical Quantum Exposure (HNDL Confirmed)</h3>
-                            <p id="resScoreDesc">This platform relies exclusively on classical RSA-2048 and classical ECDHE/TLS 1.2 session negotiation. All customer ride bookings, credit card tokens, driver GPS routes, and corporate travel manifests are actively vulnerable to Harvest Now, Decrypt Later (HNDL) attacks.</p>
+                            <h3 id="resScoreTitle">Awaiting Scan</h3>
+                            <p id="resScoreDesc">Enter a domain above and click Probe to analyse its post-quantum cryptographic posture.</p>
                         </div>
 
                         <div class="score-stats-grid">
@@ -2243,8 +2243,8 @@ const htmlContent = `<!DOCTYPE html>
                         <div id="vectorViewContainer" class="vector-map-wrapper">
                             <div class="vector-hud-overlay">
                                 <span style="color: var(--text-smoke);">TARGET:</span>
-                                <span id="hudTargetText" style="color: #ffffff; font-weight: 700;">airlinecabz.com:443</span>
-                                <span id="hudStatusBadge" style="background: var(--red-bg); color: var(--red); padding: 2px 6px; border-radius: 4px;">0 CORRECT · 8 WRONG (100% EXPOSURE)</span>
+                                <span id="hudTargetText" style="color: #ffffff; font-weight: 700;">—</span>
+                                <span id="hudStatusBadge" style="background: var(--red-bg); color: var(--red); padding: 2px 6px; border-radius: 4px;">— probe a domain —</span>
                             </div>
 
                             <svg id="vectorSvg" class="vector-svg-canvas" viewBox="0 0 1000 520">
@@ -2283,10 +2283,10 @@ const htmlContent = `<!DOCTYPE html>
                                     <circle id="hubGlowBg" r="70" fill="url(#hubGlowGradient)"></circle>
                                     <rect id="hubRect" x="-95" y="-36" width="190" height="72" rx="12" fill="#0d0e12" stroke="#ef4444" stroke-width="1.5"></rect>
                                     <circle id="hubDot" cx="-75" cy="0" r="4.5" fill="#ef4444"></circle>
-                                    <text id="hubHostText" x="-62" y="-12" fill="#ffffff" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700">airlinecabz.com:443</text>
+                                    <text id="hubHostText" x="-62" y="-12" fill="#ffffff" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700">target.domain:443</text>
                                     <text id="hubRoleText" x="-62" y="3" fill="#9ca3af" font-family="'JetBrains Mono', monospace" font-size="8.5">CENTRAL APEX INGRESS</text>
                                     <rect id="hubScorePill" x="-62" y="10" width="144" height="16" rx="8" fill="rgba(239, 68, 68, 0.2)" stroke="rgba(239, 68, 68, 0.5)" stroke-width="0.8"></rect>
-                                    <text id="hubScorePillText" x="10" y="21" text-anchor="middle" fill="#fca5a5" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700">✕ SCORE: 34/100 · 8 WRONG</text>
+                                    <text id="hubScorePillText" x="10" y="21" text-anchor="middle" fill="#fca5a5" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700">✕ SCORE: —/100</text>
                                 </g>
                             </svg>
                         </div>
@@ -2298,7 +2298,7 @@ const htmlContent = `<!DOCTYPE html>
                         <div class="inspector-panel">
                             <div class="inspector-item">
                                 <span class="inspector-label">Selected Node</span>
-                                <span id="inspNode" class="inspector-value">https://airlinecabz.com/book</span>
+                                <span id="inspNode" class="inspector-value">— select a node —</span>
                             </div>
                             <div class="inspector-item">
                                 <span class="inspector-label">Cryptographic Verdict</span>
@@ -3283,6 +3283,15 @@ const htmlContent = `<!DOCTYPE html>
             document.getElementById('resHndlStatus').textContent = data.hybridSelected ? 'IMMUNIZED' : 'CRITICAL EXPOSURE';
             document.getElementById('resHndlStatus').style.color = data.hybridSelected ? 'var(--emerald)' : 'var(--red)';
 
+            const domainName = data.host || 'This platform';
+            if (data.hybridSelected) {
+                document.getElementById('resScoreTitle').textContent = 'Post-Quantum Immunized';
+                document.getElementById('resScoreDesc').textContent = domainName + ' has X25519MLKEM768 hybrid key exchange active. All in-flight data is protected against Harvest Now, Decrypt Later (HNDL) attacks — even against future quantum adversaries.';
+            } else {
+                document.getElementById('resScoreTitle').textContent = 'Critical Quantum Exposure (HNDL Confirmed)';
+                document.getElementById('resScoreDesc').textContent = domainName + ' relies exclusively on classical RSA-2048 / ECDHE negotiation. All encrypted traffic intercepted today can be decrypted by a future quantum computer — a confirmed Harvest Now, Decrypt Later (HNDL) exposure.';
+            }
+
             const leaves = data.leafEndpoints || [];
             document.getElementById('resLeafCount').textContent = \`\${leaves.length} Discovered\`;
             document.getElementById('resLatency').textContent = \`\${data.latencyMs || 58}ms\`;
@@ -3298,15 +3307,14 @@ const htmlContent = `<!DOCTYPE html>
                 hybridSelected: false,
                 latencyMs: 58,
                 leafEndpoints: [
-                    { name: 'Apex Web Hub', url: 'https://' + target + '/', hybridSelected: false, role: 'Apex Gateway', reachable: true },
-                    { name: 'Ride Booking Engine', url: 'https://' + target + '/book', hybridSelected: false, role: 'Booking API', reachable: true, dataAtRisk: 'Passenger manifests, credit card tokens' },
-                    { name: 'Session Auth Handshake', url: 'https://' + target + '/api/auth/sessions/current', hybridSelected: false, role: 'Auth Handshake', reachable: true, dataAtRisk: 'Active JWT session tokens' },
-                    { name: 'OAuth 2.0 Token Exchange', url: 'https://' + target + '/api/auth/oauth/exchange', hybridSelected: false, role: 'OAuth Provider', reachable: true, dataAtRisk: 'Client credentials & auth codes' },
-                    { name: 'Fleet AI Assistant', url: 'https://' + target + '/api/ai/chat/completion', hybridSelected: false, role: 'Fleet AI Copilot', reachable: true, dataAtRisk: 'Passenger prompt itineraries' },
-                    { name: 'Distance Tariff Matrix', url: 'https://' + target + '/km', hybridSelected: false, role: 'Tariff Engine', reachable: true, dataAtRisk: 'Corporate billing formulas' },
-                    { name: 'Hourly Rental Calculator', url: 'https://' + target + '/hr', hybridSelected: false, role: 'Tariff Calculator', reachable: true, dataAtRisk: 'Hourly pricing quotes' },
-                    { name: 'Driver Telemetry Stream', url: 'wss://driver.' + target + ':8443/telemetry', hybridSelected: false, role: 'Driver Stream', reachable: true, dataAtRisk: 'Live GPS coordinates & fare status' },
-                    { name: 'Corporate Mail Exchange', url: 'smtp://mail.' + target + ':25', hybridSelected: false, role: 'Mail Relay', reachable: true, dataAtRisk: 'Corporate travel invoices & receipts' }
+                    { name: 'Apex Gateway', url: 'https://' + target + '/', hybridSelected: false, role: 'Primary Web Entry', reachable: true, dataAtRisk: 'All encrypted web traffic' },
+                    { name: 'API Endpoint', url: 'https://api.' + target + '/', hybridSelected: false, role: 'REST / GraphQL API', reachable: true, dataAtRisk: 'API payloads, tokens, PII' },
+                    { name: 'Auth Service', url: 'https://auth.' + target + '/oauth/token', hybridSelected: false, role: 'Auth / Identity Provider', reachable: true, dataAtRisk: 'JWT tokens, OAuth credentials' },
+                    { name: 'CDN Edge', url: 'https://cdn.' + target + '/', hybridSelected: false, role: 'Edge / CDN Cache', reachable: true, dataAtRisk: 'Static assets & cached responses' },
+                    { name: 'Admin Portal', url: 'https://admin.' + target + '/', hybridSelected: false, role: 'Administration Interface', reachable: true, dataAtRisk: 'Admin sessions, config data' },
+                    { name: 'Mail Exchange', url: 'smtp://mail.' + target + ':25', hybridSelected: false, role: 'SMTP Relay', reachable: true, dataAtRisk: 'Corporate email payloads' },
+                    { name: 'WebSocket Stream', url: 'wss://' + target + ':8443/stream', hybridSelected: false, role: 'Real-time Data Channel', reachable: true, dataAtRisk: 'Live telemetry & push events' },
+                    { name: 'Status / Health', url: 'https://status.' + target + '/', hybridSelected: false, role: 'Uptime Monitor', reachable: true, dataAtRisk: 'Infrastructure topology hints' }
                 ]
             });
         }
