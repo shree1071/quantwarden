@@ -737,6 +737,82 @@ const htmlContent = `<!DOCTYPE html>
         .stat-val-hndl { color: var(--red); font-weight: 700; }
         .stat-val-leaf { color: #ffffff; font-weight: 600; }
 
+        /* CBOM Action Buttons (Raycast Dark Glass Aesthetic) */
+        .cbom-actions-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-cbom-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 13px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: #59d499;
+            background: rgba(89, 212, 153, 0.08);
+            border: 1px solid rgba(89, 212, 153, 0.3);
+            cursor: pointer;
+            transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 12px rgba(89, 212, 153, 0.06);
+            letter-spacing: -0.01em;
+        }
+
+        .btn-cbom-download:hover {
+            background: rgba(89, 212, 153, 0.16);
+            border-color: rgba(89, 212, 153, 0.55);
+            color: #ffffff;
+            box-shadow: 0 0 18px rgba(89, 212, 153, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .btn-cbom-download svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            transition: transform 0.15s ease;
+        }
+
+        .btn-cbom-download:hover svg {
+            transform: translateY(1px);
+        }
+
+        .btn-cbom-spec {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 13px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: #d1d5db;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            cursor: pointer;
+            transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: -0.01em;
+        }
+
+        .btn-cbom-spec:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-cbom-spec svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+        }
+
         /* -------------------------------------------------------------
            VECTOR RADIAL NETWORK TOPOLOGY MAP & LEAF INSPECTOR
            ------------------------------------------------------------- */
@@ -2209,6 +2285,23 @@ const htmlContent = `<!DOCTYPE html>
                         <div class="score-text-block">
                             <h3 id="resScoreTitle">Awaiting Scan</h3>
                             <p id="resScoreDesc">Enter a domain above and click Probe to analyse its post-quantum cryptographic posture.</p>
+                            <div class="cbom-actions-wrap">
+                                <button id="btnDownloadCbom" class="btn-cbom-download" onclick="downloadCbomReport()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    <span>Download CycloneDX 1.6 CBOM</span>
+                                </button>
+                                <button id="btnViewCbomModal" class="btn-cbom-spec" onclick="openReportModal('cbom')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                    </svg>
+                                    <span>View CBOM Spec</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="score-stats-grid">
@@ -2224,17 +2317,6 @@ const htmlContent = `<!DOCTYPE html>
                                 <span class="stat-label">Latency</span>
                                 <span id="resLatency" class="stat-val-leaf">58ms</span>
                             </div>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
-                            <button id="btnDownloadCbom" class="btn-toggle-view" style="padding: 8px 14px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(89, 212, 153, 0.3); color: #59d499; background: rgba(89, 212, 153, 0.08); cursor: pointer;" onclick="downloadCbomReport()">
-                                <span>📄</span>
-                                <span>Download CycloneDX 1.6 CBOM</span>
-                            </button>
-                            <button id="btnViewCbomModal" class="btn-toggle-view" style="padding: 8px 14px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; background: rgba(255, 255, 255, 0.04); cursor: pointer;" onclick="openReportModal('cbom')">
-                                <span>🔍</span>
-                                <span>View CBOM Spec</span>
-                            </button>
                         </div>
                     </div>
 
