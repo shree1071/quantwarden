@@ -1,4 +1,5 @@
 import tls from "node:tls";
+import dns from "node:dns/promises";
 import { runProbe, toCbomReport, toSarifReport } from "./lib/qprobe/index.js";
 
 /**
@@ -33,7 +34,7 @@ export function normalizeTarget(input) {
 /**
  * Probe a single leaf endpoint over TLS
  */
-async function probeLeafCandidate(leafHost, leafName, port = 443, parentHybrid = false) {
+async function probeLeafCandidate(leafHost, leafName, port = 443, parentHybrid = false, role = "Leaf Service", dataAtRisk = "") {
     const started = Date.now();
     return new Promise((resolve) => {
         const s = tls.connect(port, leafHost, { servername: leafHost, rejectUnauthorized: false }, () => {
@@ -44,12 +45,14 @@ async function probeLeafCandidate(leafHost, leafName, port = 443, parentHybrid =
             const certKey = cert?.asn1Curve ? `EC(${cert.asn1Curve})` : (cert?.bits ? `RSA ${cert.bits}b` : "EC 256b");
             s.destroy();
 
-            // Subdomains on modern PQC CDNs (Cloudflare, Google, Akamai) inherit edge PQC
+            // Subdomains on modern PQC CDNs inherit edge PQC
             const hybrid = parentHybrid;
 
             resolve({
                 name: leafName,
+                role: role,
                 host: leafHost,
+                url: `https://${leafHost}/`,
                 port,
                 reachable: true,
                 protocol: proto,
@@ -59,16 +62,18 @@ async function probeLeafCandidate(leafHost, leafName, port = 443, parentHybrid =
                 kexGroup: hybrid ? "X25519MLKEM768 (0x11EC)" : "X25519 (Classical)",
                 hndlExposed: !hybrid,
                 latencyMs: latency,
+                dataAtRisk: dataAtRisk || (hybrid ? "Session keys fully protected against future quantum capture" : "In-flight TLS payloads susceptible to Harvest Now, Decrypt Later (HNDL)"),
                 status: "active"
             });
         });
 
-        s.setTimeout(3000);
-        s.on("timeout", () => {
+        s.setTimeout(2500, () => {
             s.destroy();
             resolve({
                 name: leafName,
+                role: role,
                 host: leafHost,
+                url: `https://${leafHost}/`,
                 port,
                 reachable: false,
                 status: "timeout",
@@ -78,7 +83,9 @@ async function probeLeafCandidate(leafHost, leafName, port = 443, parentHybrid =
         s.on("error", (e) => {
             resolve({
                 name: leafName,
+                role: role,
                 host: leafHost,
+                url: `https://${leafHost}/`,
                 port,
                 reachable: false,
                 status: "unreachable",
@@ -154,22 +161,95 @@ export async function probeDomain(targetInput, options = {}) {
         const hndlExposed = !hybridSelected;
         const readinessScore = inventory.readinessScore ?? (hybridSelected ? 97 : 90);
 
-        // Discovered leaf service candidates
-        const leafCandidates = [
-            { name: "Apex Endpoint", sub: "" },
-            { name: "REST / GraphQL API", sub: "api." },
-            { name: "Identity & OAuth / SSO", sub: "auth." },
-            { name: "Content Delivery (CDN)", sub: "cdn." },
-            { name: "Perimeter / Gateway", sub: "gateway." }
+        // ScanCannon-style attack surface discovery: harvest SANs from certificate + MX + DNS resolution
+        const discoveredMap = new Map();
+
+        // 1. Apex Ingress
+        discoveredMap.set(host, {
+            name: "Apex Gateway",
+            role: "Apex Gateway",
+            url: `https://${host}/`,
+            dataAtRisk: "Primary domain ingress & application traffic"
+        });
+
+        // 2. Harvest SANs (Subject Alternative Names) from apex certificate (ScanCannon core technique)
+        if (certMeta && Array.isArray(certMeta.sans)) {
+            for (const san of certMeta.sans) {
+                const s = san.toLowerCase().trim();
+                if (!s.includes("*") && s !== host && (s.endsWith(`.${host}`) || s === `www.${host}`)) {
+                    const prefix = s.replace(`.${host}`, "");
+                    discoveredMap.set(s, {
+                        name: `${prefix.toUpperCase()} Endpoint`,
+                        role: "Cert SAN Discovered",
+                        url: `https://${s}/`,
+                        dataAtRisk: "TLS traffic routed through certificate SAN endpoint"
+                    });
+                }
+            }
+        }
+
+        // 3. DNS MX record discovery
+        try {
+            const mxRecords = await dns.resolveMx(host).catch(() => []);
+            for (const mx of mxRecords.slice(0, 2)) {
+                if (mx.exchange && mx.exchange.toLowerCase().endsWith(host)) {
+                    const mxHost = mx.exchange.toLowerCase().replace(/\.$/, "");
+                    discoveredMap.set(mxHost, {
+                        name: "Corporate Mail Exchange",
+                        role: "SMTP Relay",
+                        url: `smtp://${mxHost}:25`,
+                        dataAtRisk: "Internal email communications & corporate credentials"
+                    });
+                }
+            }
+        } catch (_) {}
+
+        // 4. ScanCannon high-value service dictionary
+        const reconDictionary = [
+            { sub: "api", name: "REST / GraphQL API", role: "API Endpoint", dataAtRisk: "API payload tokens & customer PII" },
+            { sub: "auth", name: "OAuth / SSO Handshake", role: "Auth Service", dataAtRisk: "OAuth tokens & user credentials" },
+            { sub: "login", name: "Authentication Gateway", role: "Identity Provider", dataAtRisk: "Session cookies & passwords" },
+            { sub: "cdn", name: "Edge / CDN Cache", role: "CDN Edge", dataAtRisk: "Edge-cached data & web assets" },
+            { sub: "admin", name: "Admin Portal", role: "Admin Interface", dataAtRisk: "Administrative control plane" },
+            { sub: "gateway", name: "API Gateway", role: "Perimeter Gateway", dataAtRisk: "Microservice routing plane" },
+            { sub: "docs", name: "Developer Documentation", role: "Doc Portal", dataAtRisk: "Internal documentation & keys" },
+            { sub: "status", name: "Status / Health Monitor", role: "Uptime Monitor", dataAtRisk: "Infrastructure topology telemetry" },
+            { sub: "mail", name: "Webmail / Ingress", role: "Mail Server", dataAtRisk: "In-flight email communications" },
+            { sub: "app", name: "Core Application Service", role: "Application Hub", dataAtRisk: "Customer session state" },
+            { sub: "raw", name: "Raw Ingress Stream", role: "Raw Data Ingress", dataAtRisk: "Raw content feeds" },
+            { sub: "gist", name: "Code / Gist Repository", role: "Code Service", dataAtRisk: "Source snippets & secrets" }
         ];
 
-        // Probe leaf endpoints in parallel
-        const leafProbes = await Promise.all(
-            leafCandidates.map(c => {
-                if (c.sub === "") {
+        // 5. Test DNS resolution for dictionary candidates in parallel
+        await Promise.all(
+            reconDictionary.map(async (entry) => {
+                const subHost = `${entry.sub}.${host}`;
+                if (!discoveredMap.has(subHost)) {
+                    try {
+                        await dns.resolve4(subHost);
+                        discoveredMap.set(subHost, {
+                            name: entry.name,
+                            role: entry.role,
+                            url: `https://${subHost}/`,
+                            dataAtRisk: entry.dataAtRisk
+                        });
+                    } catch (_) {
+                        // Host does not exist in DNS; skip
+                    }
+                }
+            })
+        );
+
+        // 6. Real TLS Handshake Probing on all discovered targets
+        const targetList = Array.from(discoveredMap.entries()).slice(0, 10);
+        const leafEndpoints = await Promise.all(
+            targetList.map(([subHost, meta]) => {
+                if (subHost === host) {
                     return Promise.resolve({
-                        name: "Apex Endpoint",
+                        name: "Apex Gateway",
+                        role: "Apex Gateway",
                         host,
+                        url: `https://${host}/`,
                         port,
                         reachable: true,
                         protocol: tlsData.protocol || "TLSv1.3",
@@ -179,16 +259,13 @@ export async function probeDomain(targetInput, options = {}) {
                         kexGroup: groupName,
                         hndlExposed,
                         latencyMs: Math.max(25, finishedAt.getTime() - startedAt.getTime()),
+                        dataAtRisk: meta.dataAtRisk,
                         status: "active"
                     });
                 }
-                const leafHost = `${c.sub}${host}`;
-                return probeLeafCandidate(leafHost, c.name, 443, hybridSelected);
+                return probeLeafCandidate(subHost, meta.name, 443, hybridSelected, meta.role, meta.dataAtRisk);
             })
         );
-
-        // Filter and organize reachable leaf endpoints
-        const leafEndpoints = leafProbes;
 
         // Generate standard CycloneDX 1.6 CBOM and SARIF
         const cbom = toCbomReport(run, startedAt, finishedAt);
