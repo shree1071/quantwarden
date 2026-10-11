@@ -2333,7 +2333,7 @@ const htmlContent = `<!DOCTYPE html>
                                 spellcheck="false"
                             />
                         </div>
-                        <button type="submit" id="probeBtn" class="btn-probe">
+                        <button type="submit" id="probeBtn" class="btn-probe" onclick="if(document.getElementById('targetInput').value){runScan(document.getElementById('targetInput').value); return false;}">
                             PROBE ENDPOINT
                         </button>
                     </form>
@@ -3495,7 +3495,9 @@ const htmlContent = `<!DOCTYPE html>
             }
         }
 
-        async function runScan(target) {
+        async function runScan(rawTarget) {
+            if (!rawTarget) return;
+            const target = rawTarget.trim().replace(/^https?:\\/\\//i, '').replace(/\\/.*$/, '').trim();
             if (!target) return;
             btn.disabled = true;
             results.style.display = 'none';
@@ -3773,7 +3775,7 @@ const htmlContent = `<!DOCTYPE html>
                 tName.setAttribute('font-family', "'JetBrains Mono', monospace");
                 tName.setAttribute('font-size', '10.5');
                 tName.setAttribute('font-weight', '700');
-                const displayName = leaf.url ? leaf.url.replace(/^https?:\/\//, '') : (leaf.name || leaf.host);
+                const displayName = leaf.url ? leaf.url.replace(/^https?:\\/\\//, '') : (leaf.name || leaf.host);
                 tName.textContent = displayName.length > 22 ? displayName.substring(0, 20) + '..' : displayName;
 
                 const tCrypto = document.createElementNS('http://www.w3.org/2000/svg', 'text');
