@@ -481,8 +481,11 @@ const htmlContent = `<!DOCTYPE html>
             position: absolute;
             left: 14px;
             font-family: var(--font-mono);
-            font-size: 12px;
+            font-size: 13px;
             color: var(--text-smoke);
+            pointer-events: none;
+            user-select: none;
+            z-index: 2;
         }
 
         .target-input {
@@ -490,7 +493,7 @@ const htmlContent = `<!DOCTYPE html>
             background: #040506;
             border: 1px solid #2f3031;
             border-radius: 8px;
-            padding: 12px 14px 12px 42px;
+            padding: 12px 14px 12px 76px;
             font-family: var(--font-mono);
             font-size: 14px;
             color: #ffffff;
