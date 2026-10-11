@@ -67,7 +67,7 @@ async function probeLeafCandidate(leafHost, leafName, port = 443, parentHybrid =
             });
         });
 
-        s.setTimeout(2500, () => {
+        s.setTimeout(1600, () => {
             s.destroy();
             resolve({
                 name: leafName,

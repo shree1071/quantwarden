@@ -3647,6 +3647,11 @@ const htmlContent = `<!DOCTYPE html>
 
             document.getElementById('hudTargetText').textContent = \`\${host}:\${port}\`;
             const leaves = data.leafEndpoints || [];
+            const badge = document.getElementById('leafBadge');
+            if (badge) {
+                badge.textContent = \`\${leaves.length} LEAF NODES DETECTED\`;
+            }
+
             activeVectorLeaves = leaves;
 
             const childLeaves = leaves.length > 1 ? leaves.slice(1) : leaves;
@@ -3708,6 +3713,7 @@ const htmlContent = `<!DOCTYPE html>
                 // 3. Satellite Node Group
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 group.setAttribute('class', 'vector-node-group');
+                group.setAttribute('id', \`vectorNodeGroup_\${idx}\`);
                 group.setAttribute('data-index', idx);
 
                 const nodeW = 196;
@@ -3716,6 +3722,7 @@ const htmlContent = `<!DOCTYPE html>
                 const ny = yi - (nodeH / 2);
 
                 const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('id', \`vectorNodeRect_\${idx}\`);
                 rect.setAttribute('x', nx);
                 rect.setAttribute('y', ny);
                 rect.setAttribute('width', nodeW);
@@ -3732,7 +3739,8 @@ const htmlContent = `<!DOCTYPE html>
                 tRole.setAttribute('font-family', "'JetBrains Mono', monospace");
                 tRole.setAttribute('font-size', '8');
                 tRole.setAttribute('font-weight', '600');
-                tRole.textContent = (leaf.role || 'LEAF SERVICE').toUpperCase().substring(0, 16);
+                const roleStr = (leaf.role || 'LEAF SERVICE').toUpperCase();
+                tRole.textContent = roleStr.length > 20 ? roleStr.substring(0, 19) + '..' : roleStr;
 
                 const badgeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 const bRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -3765,7 +3773,7 @@ const htmlContent = `<!DOCTYPE html>
                 tName.setAttribute('font-family', "'JetBrains Mono', monospace");
                 tName.setAttribute('font-size', '10.5');
                 tName.setAttribute('font-weight', '700');
-                const displayName = leaf.url ? leaf.url.replace(/^https?:\\/\\//, '') : (leaf.name || leaf.host);
+                const displayName = leaf.url ? leaf.url.replace(/^https?:\/\//, '') : (leaf.name || leaf.host);
                 tName.textContent = displayName.length > 22 ? displayName.substring(0, 20) + '..' : displayName;
 
                 const tCrypto = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -3796,6 +3804,23 @@ const htmlContent = `<!DOCTYPE html>
             const leaves = activeVectorLeaves.length > 1 ? activeVectorLeaves.slice(1) : activeVectorLeaves;
             const node = leaves[idx];
             if (!node) return;
+
+            // Highlight selected node rect visually
+            leaves.forEach((_, i) => {
+                const r = document.getElementById(\`vectorNodeRect_\${i}\`);
+                if (r) {
+                    const lPqc = Boolean(leaves[i].hybridSelected);
+                    if (i === idx) {
+                        r.setAttribute('stroke', lPqc ? '#10b981' : '#ff4d4d');
+                        r.setAttribute('stroke-width', '2.2');
+                        r.setAttribute('filter', lPqc ? 'drop-shadow(0 0 10px rgba(16,185,129,0.5))' : 'drop-shadow(0 0 10px rgba(239,68,68,0.5))');
+                    } else {
+                        r.setAttribute('stroke', lPqc ? 'rgba(16, 185, 129, 0.45)' : 'rgba(239, 68, 68, 0.45)');
+                        r.setAttribute('stroke-width', '1.2');
+                        r.removeAttribute('filter');
+                    }
+                }
+            });
 
             document.getElementById('inspNode').textContent = node.url || node.name;
             const isPqc = Boolean(node.hybridSelected);
