@@ -3333,8 +3333,13 @@ const htmlContent = `<!DOCTYPE html>
             const wrongCount = childLeaves.filter(l => !l.hybridSelected).length;
             const correctCount = childLeaves.filter(l => l.hybridSelected).length;
 
-            document.getElementById('hudStatusBadge').textContent = \`\${correctCount} CORRECT · \${wrongCount} WRONG (\${Math.round((wrongCount/childLeaves.length)*100)}% EXPOSURE)\`;
-            document.getElementById('hubScorePillText').textContent = \`✕ SCORE: \${score}/100 · \${wrongCount} WRONG\`;
+            document.getElementById('hudStatusBadge').textContent = \`\${correctCount} CORRECT · \${wrongCount} WRONG (\${Math.round((wrongCount/Math.max(1, childLeaves.length))*100)}% EXPOSURE)\`;
+            document.getElementById('hubHostText').textContent = \`\${host}:\${port}\`;
+            document.getElementById('hubScorePillText').textContent = isPqc 
+                ? \`✓ SCORE: \${score}/100 · IMMUNIZED\` 
+                : \`✕ SCORE: \${score}/100 · \${wrongCount} WRONG\`;
+            document.getElementById('hubRect').setAttribute('stroke', isPqc ? '#10b981' : '#ef4444');
+            document.getElementById('hubDot').setAttribute('fill', isPqc ? '#10b981' : '#ef4444');
 
             const linesLayer = document.getElementById('vectorLinesLayer');
             const packetsLayer = document.getElementById('vectorPacketsLayer');
