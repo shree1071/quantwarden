@@ -955,6 +955,108 @@ const htmlContent = `<!DOCTYPE html>
         .inspector-label { color: var(--text-smoke); text-transform: uppercase; font-size: 9px; }
         .inspector-value { color: #ffffff; font-weight: 600; }
 
+        /* AI Executive Intelligence Analysis Card */
+        .ai-analysis-card {
+            background: #090a0d;
+            border: 1px solid #27282b;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-key);
+        }
+
+        .ai-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ai-card-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .ai-provider-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: #59d499;
+            background: rgba(89, 212, 153, 0.1);
+            border: 1px solid rgba(89, 212, 153, 0.3);
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+            font-weight: 600;
+        }
+
+        .ai-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 800px) {
+            .ai-grid { grid-template-columns: 1fr; }
+        }
+
+        .ai-block {
+            background: #060709;
+            border: 1px solid #1a1b1f;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .ai-block-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-smoke);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ai-block-content {
+            font-size: 13px;
+            color: #d1d5db;
+            line-height: 1.55;
+        }
+
+        .ai-steps-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 12.5px;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        .ai-steps-list li {
+            margin-bottom: 6px;
+        }
+
+        .ai-config-snippet {
+            background: #040506;
+            border: 1px solid #1c1d22;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: #a3e635;
+            overflow-x: auto;
+            margin-top: 6px;
+        }
+
         /* -------------------------------------------------------------
            COMPARISON SECTION: "CLASSICAL CRISIS VS PQC CLARITY"
            (TriageComparisonSection.tsx)
@@ -2410,6 +2512,54 @@ const htmlContent = `<!DOCTYPE html>
                             </div>
                         </div>
                     </div>
+
+                    <!-- AI Executive Cryptographic Intelligence & Migration Directives -->
+                    <div id="aiAnalysisCard" class="ai-analysis-card" style="display: none;">
+                        <div class="ai-card-header">
+                            <div class="ai-card-title-group">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#59d499" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12 2.1 12a10.1 10.1 0 0 0 9.9 10z"/></svg>
+                                <span class="ai-card-title">Sovereign Post-Quantum Migration Directives</span>
+                            </div>
+                            <span id="aiProviderBadge" class="ai-provider-badge">Google Gemini 2.5 Flash</span>
+                        </div>
+
+                        <div class="ai-grid">
+                            <div class="ai-block">
+                                <div class="ai-block-label">
+                                    <span>🛡️</span>
+                                    <span>Executive Posture Assessment</span>
+                                </div>
+                                <div id="aiExecSummary" class="ai-block-content">—</div>
+                            </div>
+                            <div class="ai-block">
+                                <div class="ai-block-label">
+                                    <span>⚠️</span>
+                                    <span>HNDL Intercept Analysis</span>
+                                </div>
+                                <div id="aiHndlAnalysis" class="ai-block-content">—</div>
+                            </div>
+                        </div>
+
+                        <div class="ai-grid">
+                            <div class="ai-block">
+                                <div class="ai-block-label">
+                                    <span>⚡</span>
+                                    <span>Priority Remediation Directives</span>
+                                </div>
+                                <ol id="aiMigrationSteps" class="ai-steps-list">
+                                    <li>Awaiting scan...</li>
+                                </ol>
+                            </div>
+                            <div class="ai-block">
+                                <div class="ai-block-label">
+                                    <span>💻</span>
+                                    <span>Edge Remediation Config Directive</span>
+                                </div>
+                                <div class="ai-block-content" style="font-size: 11px; color: var(--text-smoke); margin-bottom: 6px;">Nginx 1.25+ / Cloudflare TLS Directive:</div>
+                                <pre id="aiConfigSnippet" class="ai-config-snippet"><code>ssl_ecdh_curve X25519MLKEM768:X25519;</code></pre>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3426,6 +3576,46 @@ const htmlContent = `<!DOCTYPE html>
             document.getElementById('resLeafCount').textContent = \`\${leaves.length} Discovered\`;
             document.getElementById('resLatency').textContent = \`\${data.latencyMs || 58}ms\`;
 
+            // Populate Sovereign AI Analysis Directives
+            const aiCard = document.getElementById('aiAnalysisCard');
+            if (aiCard) {
+                const ai = data.ai || {
+                    provider: 'Quantguard Sovereign PQC Advisor',
+                    executiveSummary: \`\${domainName} \${data.hybridSelected ? 'exhibits robust quantum immunity with active ML-KEM-768 hybrid key negotiation.' : 'currently relies on classical key exchange, exposing in-flight encrypted traffic to Harvest Now, Decrypt Later (HNDL) capture.'}\`,
+                    hndlAnalysis: data.hybridSelected ? 'Zero HNDL vector detected; all encrypted sessions protected against future CRQC decryption.' : 'Passive adversaries recording encrypted handshakes today can decrypt session contents once quantum cryptanalysis becomes practical.',
+                    migrationSteps: data.hybridSelected ? [
+                        'Maintain TLS 1.3 policy and verify client support for group 0x11EC',
+                        'Plan migration to NIST FIPS 204 (ML-DSA) post-quantum certificates',
+                        'Audit internal backend microservices for classical cipher fallbacks'
+                    ] : [
+                        \`Upgrade edge load balancers for \${domainName} to TLS 1.3 with X25519MLKEM768 hybrid KEX\`,
+                        'Deprecate classical RSA and ECDHE cipher suites on all discovered perimeter ingress points',
+                        'Generate and maintain continuous CycloneDX 1.6 Cryptographic Bills of Materials (CBOM)'
+                    ],
+                    nginxConfig: \`# Emergency PQC Remediation for \${domainName}\nserver {\n    server_name \${domainName};\n    ssl_protocols TLSv1.3;\n    ssl_ecdh_curve X25519MLKEM768:X25519;\n}\`
+                };
+
+                aiCard.style.display = 'block';
+                document.getElementById('aiProviderBadge').textContent = ai.provider || 'Google Gemini 2.5 Flash';
+                document.getElementById('aiExecSummary').textContent = ai.executiveSummary || 'Post-quantum evaluation complete.';
+                document.getElementById('aiHndlAnalysis').textContent = ai.hndlAnalysis || 'HNDL attack surface analyzed.';
+
+                const stepsList = document.getElementById('aiMigrationSteps');
+                if (stepsList && Array.isArray(ai.migrationSteps)) {
+                    stepsList.innerHTML = '';
+                    ai.migrationSteps.forEach(step => {
+                        const li = document.createElement('li');
+                        li.textContent = step;
+                        stepsList.appendChild(li);
+                    });
+                }
+
+                const configSnippet = document.getElementById('aiConfigSnippet');
+                if (configSnippet) {
+                    configSnippet.textContent = ai.nginxConfig || 'ssl_ecdh_curve X25519MLKEM768:X25519;';
+                }
+            }
+
             renderVectorTopology(data);
         }
 
@@ -3790,9 +3980,9 @@ const htmlContent = `<!DOCTYPE html>
             }, 800);
         }
 
-        // Auto-run benchmark demo on DOM load
+        // Do not auto-probe on load: wait for user to enter domain or click preset
         window.addEventListener('DOMContentLoaded', () => {
-            runScan('airlinecabz.com');
+            // Idle state awaiting user probe
         });
     </script>
 </body>
